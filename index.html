@@ -1,0 +1,4855 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>线性代数冒险 - Linear Algebra Adventure</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Noto+Sans+SC:wght@300;400;700&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#0a0e27;--bg2:#111638;--primary:#00d4ff;--accent:#ff6b35;
+  --success:#00ff88;--error:#ff3366;--warning:#ffcc00;
+  --text:#e0e6ff;--text-dim:#6b7394;--card:rgba(17,22,56,0.85);
+  --border:rgba(0,212,255,0.2);--glow:0 0 20px rgba(0,212,255,0.3);
+}
+html,body{width:100%;height:100%;overflow:hidden;font-family:'Noto Sans SC',sans-serif;background:var(--bg);color:var(--text)}
+body{display:flex;justify-content:center;align-items:center}
+#app{width:100%;max-width:900px;height:100vh;position:relative;overflow:hidden}
+canvas#bgCanvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:0;pointer-events:none}
+.screen{position:absolute;top:0;left:0;width:100%;height:100%;display:none;flex-direction:column;align-items:center;z-index:1;padding:20px;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.screen.active{display:flex}
+.screen.center-content{justify-content:center}
+.font-orb{font-family:'Orbitron',monospace}
+.font-mono{font-family:'JetBrains Mono',monospace}
+h1{font-family:'Orbitron',monospace;font-size:clamp(1.8rem,5vw,3rem);font-weight:900;background:linear-gradient(135deg,var(--primary),var(--accent));-webkit-background-clip:text;-webkit-text-fill-color:transparent;text-align:center;margin-bottom:10px;letter-spacing:2px}
+h2{font-family:'Orbitron',monospace;font-size:clamp(1.2rem,3vw,1.8rem);font-weight:700;color:var(--primary);margin-bottom:15px;text-align:center}
+h3{font-size:1.1rem;color:var(--text-dim);margin-bottom:8px;text-align:center}
+.subtitle{color:var(--text-dim);font-size:clamp(0.85rem,2vw,1rem);margin-bottom:30px;text-align:center}
+.btn{font-family:'Orbitron',monospace;padding:12px 28px;border:2px solid var(--primary);background:transparent;color:var(--primary);font-size:0.95rem;cursor:pointer;border-radius:8px;transition:all .3s;position:relative;overflow:hidden;text-transform:uppercase;letter-spacing:1px}
+.btn:hover{background:var(--primary);color:var(--bg);box-shadow:var(--glow);transform:translateY(-2px)}
+.btn:active{transform:translateY(0)}
+.btn-accent{border-color:var(--accent);color:var(--accent)}
+.btn-accent:hover{background:var(--accent);color:var(--bg);box-shadow:0 0 20px rgba(255,107,53,0.3)}
+.btn-success{border-color:var(--success);color:var(--success)}
+.btn-success:hover{background:var(--success);color:var(--bg);box-shadow:0 0 20px rgba(0,255,136,0.3)}
+.btn-error{border-color:var(--error);color:var(--error)}
+.btn-error:hover{background:var(--error);color:#fff;box-shadow:0 0 20px rgba(255,51,102,0.3)}
+.btn-sm{padding:8px 18px;font-size:0.8rem}
+.btn-lg{padding:16px 40px;font-size:1.1rem}
+.btn-group{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:15px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;backdrop-filter:blur(10px);width:100%;max-width:600px}
+.mode-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:15px;width:100%;max-width:700px;margin:20px 0}
+.mode-card{background:var(--card);border:2px solid var(--border);border-radius:12px;padding:20px 15px;text-align:center;cursor:pointer;transition:all .3s;position:relative;overflow:hidden}
+.mode-card:hover{transform:translateY(-5px);box-shadow:var(--glow)}
+.mode-card .icon{font-family:'Orbitron',monospace;font-size:2rem;margin-bottom:8px;display:block}
+.mode-card .name{font-family:'Orbitron',monospace;font-size:0.75rem;color:var(--text-dim);letter-spacing:1px;margin-bottom:4px}
+.mode-card .name-zh{font-size:1rem;font-weight:700;margin-bottom:6px}
+.mode-card .desc{font-size:0.8rem;color:var(--text-dim)}
+.level-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:12px;width:100%;max-width:600px;margin:15px 0}
+.level-card{background:var(--card);border:2px solid var(--border);border-radius:10px;padding:15px;text-align:center;cursor:pointer;transition:all .3s;position:relative}
+.level-card:hover{transform:translateY(-3px);box-shadow:var(--glow)}
+.level-card.locked{opacity:0.4;cursor:not-allowed}
+.level-card.locked:hover{transform:none;box-shadow:none}
+.level-card .level-num{font-family:'Orbitron',monospace;font-size:1.5rem;font-weight:900}
+.level-card .level-name{font-size:0.8rem;color:var(--text-dim);margin-top:4px}
+.level-card .stars{margin-top:6px;font-size:0.9rem;color:var(--warning)}
+.cat-section{width:100%;max-width:650px;margin:10px 0}
+.cat-header{display:flex;align-items:center;gap:10px;margin-bottom:8px;padding:0 5px}
+.cat-header .cat-name{font-family:'Orbitron',monospace;font-size:0.85rem;letter-spacing:1px}
+.cat-header .cat-name-zh{font-size:0.9rem;font-weight:700}
+.cat-header .cat-total{font-size:0.75rem;color:var(--text-dim);margin-left:auto}
+.matrix-display{display:inline-grid;gap:2px;padding:10px;margin:8px 0;font-family:'JetBrains Mono',monospace;font-size:clamp(1rem,2.5vw,1.4rem);position:relative}
+.matrix-display::before,.matrix-display::after{content:'';position:absolute;top:-5px;bottom:-5px;width:3px;border-radius:2px}
+.matrix-display::before{left:-8px;border-left:3px solid var(--primary);border-top:3px solid var(--primary);border-bottom:3px solid var(--primary);border-radius:4px 0 0 4px}
+.matrix-display::after{right:-8px;border-right:3px solid var(--primary);border-top:3px solid var(--primary);border-bottom:3px solid var(--primary);border-radius:0 4px 4px 0}
+.matrix-cell{width:clamp(40px,8vw,60px);height:clamp(36px,7vw,50px);display:flex;align-items:center;justify-content:center;background:rgba(0,212,255,0.05);border:1px solid rgba(0,212,255,0.15);border-radius:4px;color:var(--text)}
+.matrix-cell.input-cell{background:rgba(0,212,255,0.1);border-color:var(--primary);cursor:pointer}
+.matrix-cell.input-cell input{width:100%;height:100%;background:transparent;border:none;color:var(--primary);text-align:center;font-family:'JetBrains Mono',monospace;font-size:inherit;outline:none}
+.matrix-cell.correct{background:rgba(0,255,136,0.2);border-color:var(--success);color:var(--success)}
+.matrix-cell.wrong{background:rgba(255,51,102,0.2);border-color:var(--error);color:var(--error)}
+.matrix-cell.revealed{background:rgba(255,204,0,0.15);border-color:var(--warning);color:var(--warning)}
+.game-hud{display:flex;justify-content:space-between;align-items:center;width:100%;max-width:700px;padding:10px 15px;background:var(--card);border:1px solid var(--border);border-radius:10px;margin-bottom:15px;flex-wrap:wrap;gap:8px}
+.hud-item{display:flex;align-items:center;gap:6px;font-size:0.85rem}
+.hud-item .label{color:var(--text-dim);font-size:0.75rem}
+.hud-item .value{font-family:'Orbitron',monospace;font-weight:700;color:var(--primary)}
+.hud-item .value.score-val{color:var(--warning)}
+.hud-item .value.combo-val{color:var(--accent)}
+.hud-item .value.time-val{color:var(--success)}
+.game-area{display:flex;flex-direction:column;align-items:center;gap:15px;width:100%;max-width:700px}
+.problem-statement{font-size:1.1rem;text-align:center;margin:5px 0}
+.problem-statement .op{color:var(--accent);font-weight:700;font-size:1.3rem}
+.answer-input{font-family:'JetBrains Mono',monospace;font-size:1.3rem;padding:10px 20px;background:rgba(0,212,255,0.08);border:2px solid var(--primary);border-radius:8px;color:var(--primary);text-align:center;width:150px;outline:none;transition:border-color .3s}
+.answer-input:focus{border-color:var(--accent);box-shadow:0 0 15px rgba(255,107,53,0.3)}
+.answer-input.correct{border-color:var(--success);color:var(--success)}
+.answer-input.wrong{border-color:var(--error);color:var(--error)}
+.judgment-btns{display:flex;gap:15px;margin:10px 0}
+.judgment-btn{padding:15px 30px;border:2px solid;border-radius:10px;font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s;font-family:'Noto Sans SC',sans-serif}
+.judgment-btn.dep{border-color:var(--error);color:var(--error);background:rgba(255,51,102,0.1)}
+.judgment-btn.dep:hover{background:var(--error);color:#fff}
+.judgment-btn.indep{border-color:var(--success);color:var(--success);background:rgba(0,255,136,0.1)}
+.judgment-btn.indep:hover{background:var(--success);color:var(--bg)}
+.judgment-btn.selected-correct{animation:correctPulse .5s}
+.judgment-btn.selected-wrong{animation:wrongShake .5s}
+.rules-panel{background:var(--card);border:1px solid var(--border);border-radius:10px;width:100%;max-width:700px;margin:10px 0;overflow:hidden}
+.rules-toggle{width:100%;padding:12px 15px;background:transparent;border:none;color:var(--text-dim);font-size:0.85rem;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-family:'Noto Sans SC',sans-serif}
+.rules-toggle:hover{color:var(--text)}
+.rules-content{padding:0 15px;max-height:0;overflow:hidden;transition:max-height .3s,padding .3s}
+.rules-content.open{max-height:500px;padding:10px 15px 15px}
+.rules-content p{font-size:0.85rem;line-height:1.6;margin:5px 0;color:var(--text-dim)}
+.rules-content .formula{font-family:'JetBrains Mono',monospace;color:var(--primary);background:rgba(0,212,255,0.08);padding:2px 8px;border-radius:4px;display:inline-block;margin:3px 0}
+.tutorial-box{background:var(--card);border:2px solid var(--warning);border-radius:12px;padding:20px;width:100%;max-width:600px;position:relative;margin:10px 0}
+.tutorial-box .tut-title{font-family:'Orbitron',monospace;color:var(--warning);font-size:1rem;margin-bottom:10px}
+.tutorial-box p{font-size:0.9rem;line-height:1.7;margin:8px 0;color:var(--text)}
+.tutorial-box .formula-block{background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.2);border-radius:8px;padding:12px;margin:10px 0;font-family:'JetBrains Mono',monospace;text-align:center;color:var(--warning);font-size:1rem;line-height:1.8}
+.tutorial-box .example-block{background:rgba(0,212,255,0.06);border:1px solid rgba(0,212,255,0.15);border-radius:8px;padding:14px 16px;margin:10px 0;font-family:'JetBrains Mono',monospace;color:var(--text);font-size:0.88rem;line-height:2;white-space:pre-wrap;word-break:break-all}
+.tutorial-box .example-block .arrow{color:var(--primary);font-weight:700}
+.tutorial-box .example-block .check{color:var(--success);font-weight:700}
+.tutorial-box .tut-progress{font-size:0.8rem;color:var(--text-dim);margin-bottom:16px;padding:4px 12px;background:rgba(0,212,255,0.08);border-radius:20px;display:inline-block}
+.tutorial-box .step-content{flex:1}
+.tutorial-box .step{display:flex;gap:14px;align-items:flex-start;margin-bottom:18px}
+.tutorial-box .step-num{min-width:32px;height:32px;background:rgba(0,212,255,0.15);border:1px solid rgba(0,212,255,0.3);border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'Orbitron',sans-serif;font-size:0.8rem;color:var(--primary);flex-shrink:0;margin-top:2px}
+.tutorial-box .step-text{color:var(--text);font-size:0.95rem;line-height:1.7;margin-bottom:4px}
+.tutorial-box .step-text{font-size:0.85rem;line-height:1.6;color:var(--text)}
+.guide-bubble{position:absolute;background:var(--warning);color:var(--bg);padding:8px 14px;border-radius:8px;font-size:0.8rem;font-weight:700;z-index:10;white-space:nowrap;pointer-events:none;animation:bubbleFloat 2s ease-in-out infinite}
+.guide-bubble::after{content:'';position:absolute;bottom:-8px;left:50%;transform:translateX(-50%);border:8px solid transparent;border-top-color:var(--warning);border-bottom:0}
+.result-card{background:var(--card);border:2px solid var(--border);border-radius:16px;padding:30px;text-align:center;width:100%;max-width:500px}
+.result-card .big-score{font-family:'Orbitron',monospace;font-size:3rem;font-weight:900;color:var(--warning);margin:10px 0}
+.result-card .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:15px 0}
+.result-card .stat{background:rgba(0,212,255,0.05);border-radius:8px;padding:10px}
+.result-card .stat .stat-label{font-size:0.75rem;color:var(--text-dim)}
+.result-card .stat .stat-value{font-family:'Orbitron',monospace;font-size:1.1rem;font-weight:700;color:var(--primary)}
+.result-card .stars-display{font-size:2rem;margin:10px 0}
+.settings-panel{background:var(--card);border:1px solid var(--border);border-radius:12px;padding:20px;width:100%;max-width:400px}
+.settings-panel .setting-row{display:flex;justify-content:space-between;align-items:center;padding:10px 0;border-bottom:1px solid var(--border)}
+.settings-panel .setting-row:last-child{border-bottom:none}
+.settings-panel .setting-label{font-size:0.9rem}
+.diff-btns{display:flex;gap:5px}
+.diff-btn{padding:5px 12px;border:1px solid var(--border);background:transparent;color:var(--text-dim);font-size:0.75rem;font-family:'Orbitron',monospace;border-radius:5px;cursor:pointer;transition:all .2s}
+.diff-btn.active{border-color:var(--primary);color:var(--primary);background:rgba(0,212,255,0.1)}
+.diff-btn:hover{border-color:var(--primary);color:var(--primary)}
+.transition-overlay{position:fixed;top:0;left:0;width:100%;height:100%;z-index:100;display:none;align-items:center;justify-content:center;background:rgba(10,14,39,0.9);flex-direction:column;gap:15px}
+.transition-overlay.active{display:flex}
+.transition-overlay .trans-text{font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;animation:transPulse 1s ease-in-out infinite}
+.transition-overlay .trans-sub{color:var(--text-dim);font-size:1rem}
+.particle-container{position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:50}
+.particle{position:absolute;border-radius:50%;pointer-events:none;animation:particleFade 1s ease-out forwards}
+.shockwave{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);width:10px;height:10px;border-radius:50%;border:3px solid var(--error);pointer-events:none;z-index:50;animation:shockwaveExpand .6s ease-out forwards}
+.confetti{position:fixed;top:-10px;width:10px;height:10px;pointer-events:none;z-index:50;animation:confettiFall 2s ease-in forwards}
+.combo-glow{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-family:'Orbitron',monospace;font-size:2rem;font-weight:900;color:var(--accent);pointer-events:none;z-index:50;animation:comboGlow 1s ease-out forwards;text-shadow:0 0 20px var(--accent)}
+.progress-bar{width:100%;max-width:700px;height:6px;background:rgba(0,212,255,0.1);border-radius:3px;margin:5px 0;overflow:hidden}
+.progress-bar .fill{height:100%;background:linear-gradient(90deg,var(--primary),var(--accent));border-radius:3px;transition:width .3s}
+.arcade-lives{font-size:1.2rem;letter-spacing:2px}
+.arcade-badge{display:inline-block;padding:3px 10px;border-radius:20px;font-size:0.7rem;font-family:'Orbitron',monospace;letter-spacing:1px;background:rgba(244,114,182,0.15);border:1px solid rgba(244,114,182,0.3);color:#f472b6}
+.eigen-eq{font-family:'JetBrains Mono',monospace;font-size:1.1rem;text-align:center;margin:8px 0;color:var(--text)}
+.eigen-eq .blank{display:inline-block;width:50px;border-bottom:2px solid var(--primary);margin:0 3px;text-align:center;color:var(--primary)}
+.eigen-inputs{display:flex;gap:15px;align-items:center;justify-content:center;margin:10px 0}
+.eigen-inputs label{font-size:0.9rem;color:var(--text-dim)}
+.eigen-inputs input{font-family:'JetBrains Mono',monospace;font-size:1.1rem;padding:8px 12px;background:rgba(0,212,255,0.08);border:2px solid var(--primary);border-radius:6px;color:var(--primary);text-align:center;width:100px;outline:none}
+.eigen-inputs input:focus{border-color:var(--accent)}
+.hint-btn{position:absolute;top:10px;right:10px;background:transparent;border:1px solid var(--warning);color:var(--warning);padding:5px 10px;border-radius:6px;font-size:0.75rem;cursor:pointer;font-family:'Orbitron',monospace;transition:all .2s}
+.hint-btn:hover{background:var(--warning);color:var(--bg)}
+.back-btn{position:absolute;top:15px;left:15px;background:transparent;border:1px solid var(--border);color:var(--text-dim);padding:6px 14px;border-radius:6px;font-size:0.8rem;cursor:pointer;transition:all .2s;z-index:5;font-family:'Noto Sans SC',sans-serif}
+.back-btn:hover{border-color:var(--primary);color:var(--primary)}
+#animContainer { background: rgba(0,212,255,0.03); border: 1px solid rgba(0,212,255,0.1); border-radius: 12px; padding: 16px; }
+#animCanvas { display: block; margin: 0 auto; border-radius: 8px; background: rgba(10,14,39,0.8); max-width: 100%; }
+@keyframes correctPulse{0%{transform:scale(1)}50%{transform:scale(1.05)}100%{transform:scale(1)}}
+@keyframes wrongShake{0%,100%{transform:translateX(0)}20%{transform:translateX(-10px)}40%{transform:translateX(10px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}
+@keyframes particleFade{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--dx),var(--dy)) scale(0)}}
+@keyframes shockwaveExpand{0%{width:10px;height:10px;opacity:1}100%{width:300px;height:300px;opacity:0}}
+@keyframes confettiFall{0%{transform:translateY(0) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+@keyframes comboGlow{0%{opacity:1;transform:translate(-50%,-50%) scale(0.5)}50%{opacity:1;transform:translate(-50%,-50%) scale(1.2)}100%{opacity:0;transform:translate(-50%,-50%) scale(1.5)}}
+@keyframes bubbleFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
+@keyframes transPulse{0%,100%{opacity:1}50%{opacity:0.5}}
+@keyframes fadeIn{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
+@keyframes slideIn{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
+.fade-in{animation:fadeIn .5s ease-out}
+.slide-in{animation:slideIn .4s ease-out}
+@media(max-width:600px){
+  .mode-grid{grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+  .mode-card{padding:15px 10px}
+  .mode-card .icon{font-size:1.5rem}
+  .game-hud{padding:8px 10px;gap:5px}
+  .hud-item{font-size:0.75rem}
+  .judgment-btn{padding:12px 20px;font-size:0.9rem}
+  .matrix-cell{width:36px;height:32px;font-size:0.85rem}
+  .answer-input{font-size:1.1rem;width:120px}
+}
+</style>
+</head>
+<body>
+<canvas id="bgCanvas"></canvas>
+<div class="particle-container" id="particleContainer"></div>
+<div class="transition-overlay" id="transitionOverlay">
+  <div class="trans-text" id="transText"></div>
+  <div class="trans-sub" id="transSub"></div>
+</div>
+
+<div id="app">
+  <!-- START SCREEN -->
+  <div class="screen active center-content" id="startScreen">
+    <div style="animation:fadeIn .8s ease-out">
+      <h1>LINEAR ALGEBRA</h1>
+      <h2 style="color:var(--accent);font-size:clamp(1rem,3vw,1.5rem);margin-bottom:5px">线 性 代 数 冒 险</h2>
+      <p class="subtitle">掌握矩阵运算，征服线性世界</p>
+      <div class="btn-group" style="flex-direction:column;align-items:center;gap:12px">
+        <button class="btn btn-lg" onclick="showScreen('modeSelectScreen')">开始冒险</button>
+        <button class="btn btn-sm btn-accent" onclick="showScreen('settingsScreen')">游戏设置</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODE SELECT SCREEN -->
+  <div class="screen center-content" id="modeSelectScreen">
+    <button class="back-btn" onclick="showScreen('startScreen')">&#8592; 返回</button>
+    <h2>选择模式</h2>
+    <p class="subtitle">选择你想挑战的题型</p>
+    <div class="mode-grid" id="modeGrid"></div>
+  </div>
+
+  <!-- LEVEL SELECT SCREEN -->
+  <div class="screen center-content" id="levelSelectScreen">
+    <button class="back-btn" onclick="showScreen('modeSelectScreen')">&#8592; 返回</button>
+    <h2 id="levelSelectTitle">选择关卡</h2>
+    <div id="levelCategories"></div>
+  </div>
+
+  <!-- TUTORIAL SCREEN -->
+  <div class="screen" id="tutorialScreen" style="padding-top:30px;padding-bottom:40px;">
+    <div id="tutorialContent" style="max-width:600px;width:100%">
+      <div id="animContainer" style="display:none; margin: 0 auto 16px auto; max-width:520px; width:100%;">
+        <canvas id="animCanvas" width="480" height="280"></canvas>
+        <div style="display:flex; gap:10px; justify-content:center; margin-top:10px;">
+          <button class="btn btn-sm" id="animPlayBtn" onclick="togglePause()">播放演示</button>
+          <button class="btn btn-sm" id="animResetBtn" onclick="resetAnimation()">重置</button>
+        </div>
+        <div id="animCaption" style="text-align:center; color:var(--text-dim); font-size:0.85rem; margin-top:8px; min-height:20px;"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- GAME SCREEN -->
+  <div class="screen" id="gameScreen">
+    <button class="back-btn" onclick="openGameSettings()">&#9881; 设置</button>
+    <div class="game-hud" id="gameHud">
+      <div class="hud-item"><span class="label">得分</span><span class="value score-val" id="hudScore">0</span></div>
+      <div class="hud-item"><span class="label">连击</span><span class="value combo-val" id="hudCombo">0</span></div>
+      <div class="hud-item"><span class="label">题目</span><span class="value" id="hudProgress">1/5</span></div>
+      <div class="hud-item"><span class="label">时间</span><span class="value time-val" id="hudTime">0s</span></div>
+    </div>
+    <div class="progress-bar"><div class="fill" id="progressFill" style="width:0%"></div></div>
+    <div class="game-area" id="gameArea"></div>
+    <div class="rules-panel" id="rulesPanel" style="margin-top:10px">
+      <button class="rules-toggle" onclick="toggleRules()">
+        <span>&#9654; 查看规则与公式</span><span id="rulesArrow">&#9660;</span>
+      </button>
+      <div class="rules-content" id="rulesContent"></div>
+    </div>
+    <div class="btn-group" style="margin-top:10px">
+      <button class="btn btn-sm" onclick="useHint()" id="hintBtn" style="display:none">提示 (-5分)</button>
+    </div>
+    <!-- Game Settings Overlay -->
+    <div class="overlay" id="gameSettingsOverlay" style="display:none">
+      <div class="settings-card fade-in" style="max-width:360px">
+        <h3 style="margin:0 0 20px;color:var(--primary)">游戏设置</h3>
+        <div style="display:flex;flex-direction:column;gap:12px">
+          <button class="btn" onclick="resumeGame()" style="justify-content:center">继续游戏</button>
+          <button class="btn" onclick="restartCurrentLevel()" style="justify-content:center">重新开始本关</button>
+          <button class="btn btn-sm" onclick="quitToLevelSelect()" style="justify-content:center">退出到关卡选择</button>
+          <button class="btn btn-sm btn-accent" onclick="quitToModeSelect()" style="justify-content:center">退出到模式选择</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RESULT SCREEN -->
+  <div class="screen" id="resultScreen">
+    <div class="result-card fade-in" id="resultCard"></div>
+  </div>
+
+  <!-- SETTINGS SCREEN -->
+  <div class="screen" id="settingsScreen">
+    <button class="back-btn" onclick="showScreen('startScreen')">&#8592; 返回</button>
+    <h2>游戏设置</h2>
+    <div class="settings-panel">
+      <div class="setting-row">
+        <span class="setting-label">难度</span>
+        <div class="diff-btns" id="diffBtns">
+          <button class="diff-btn" data-diff="easy" onclick="setDifficulty('easy')">EASY</button>
+          <button class="diff-btn active" data-diff="normal" onclick="setDifficulty('normal')">NORMAL</button>
+          <button class="diff-btn" data-diff="hard" onclick="setDifficulty('hard')">HARD</button>
+        </div>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">重播教程</span>
+        <button class="btn btn-sm btn-success" onclick="replayTutorial()">重播</button>
+      </div>
+      <div class="setting-row">
+        <span class="setting-label">重置进度</span>
+        <button class="btn btn-sm btn-error" onclick="resetProgress()">重置</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// ==================== CONFIG ====================
+const gameModes = {
+  multiplication: { name: '矩阵乘法', nameEn: 'MULTIPLICATION', icon: '×', color: '#00d4ff', desc: '计算矩阵A×B的结果' },
+  determinant:   { name: '行列式计算', nameEn: 'DETERMINANT', icon: '|A|', color: '#00ff88', desc: '计算方阵的行列式值' },
+  linearDep:     { name: '线性相关性', nameEn: 'LINEAR DEP.', icon: '∑', color: '#ff6b35', desc: '判断向量组的线性相关性' },
+  inverse:       { name: '矩阵求逆', nameEn: 'INVERSE', icon: 'A⁻¹', color: '#ff3366', desc: '计算矩阵的逆矩阵' },
+  eigenvalue:    { name: '特征值', nameEn: 'EIGENVALUES', icon: 'λ', color: '#ffcc00', desc: '求矩阵的特征值' },
+  transpose:     { name: '矩阵转置', nameEn: 'TRANSPOSE', icon: 'Aᵀ', color: '#a78bfa', desc: '计算矩阵的转置' },
+  symmetry:      { name: '对称性判断', nameEn: 'SYMMETRY', icon: '↔', color: '#f472b6', desc: '街机模式：判断矩阵对称类型', arcade: true },
+  rank:          { name: '矩阵的秩', nameEn: 'RANK', icon: 'r(A)', color: '#34d399', desc: '求矩阵的秩' },
+  equation:      { name: '线性方程组', nameEn: 'EQUATIONS', icon: 'Ax=b', color: '#60a5fa', desc: '求解线性方程组' },
+  elementary:    { name: '初等变换', nameEn: 'ROW OPS', icon: '↻', color: '#fbbf24', desc: '矩阵的初等行变换' },
+};
+const categories = {
+  tutorial:     { name: '新手教程', nameEn: 'TUTORIAL', total: 1, color: '#00ff88' },
+  beginner:     { name: '初级关卡', nameEn: 'BEGINNER', total: 3, color: '#00d4ff' },
+  intermediate: { name: '中级关卡', nameEn: 'INTERMEDIATE', total: 3, color: '#ff6b35' },
+  advanced:     { name: '高级关卡', nameEn: 'ADVANCED', total: 4, color: '#ff3366' },
+};
+
+// ==================== STATE ====================
+let state = {
+  currentMode: null,
+  currentCategory: null,
+  currentLevel: 0,
+  difficulty: 'normal',
+  score: 0,
+  combo: 0,
+  maxCombo: 0,
+  questionIndex: 0,
+  totalQuestions: 5,
+  correctCount: 0,
+  startTime: 0,
+  questionStartTime: 0,
+  hintsUsed: 0,
+  isTutorial: false,
+  tutorialStep: 0,
+  questions: [],
+  answers: [],
+  answered: false,
+  timerInterval: null,
+  elapsed: 0,
+};
+
+let progress = loadProgress();
+
+function loadProgress() {
+  try {
+    const d = JSON.parse(localStorage.getItem('la_game_progress'));
+    if (d && d.modes) return d;
+  } catch(e) {}
+  const p = { modes: {} };
+  Object.keys(gameModes).forEach(m => { p.modes[m] = {}; });
+  return p;
+}
+function saveProgress() { localStorage.setItem('la_game_progress', JSON.stringify(progress)); }
+function resetProgress() {
+  progress = { modes: {} };
+  Object.keys(gameModes).forEach(m => { progress.modes[m] = {}; });
+  saveProgress();
+  alert('进度已重置！');
+}
+function getStars(mode, cat, lvl) {
+  try { return (progress.modes[mode][cat] && progress.modes[mode][cat][lvl]) || 0; } catch(e) { return 0; }
+}
+function setStars(mode, cat, lvl, s) {
+  if (!progress.modes[mode]) progress.modes[mode] = {};
+  if (!progress.modes[mode][cat]) progress.modes[mode][cat] = {};
+  const old = progress.modes[mode][cat][lvl] || 0;
+  progress.modes[mode][cat][lvl] = Math.max(old, s);
+  saveProgress();
+}
+function isUnlocked(mode, cat, lvl) {
+  if (cat === 'tutorial') return true;
+  if (cat === 'beginner') return getStars(mode, 'tutorial', 0) > 0;
+  const cats = Object.keys(categories);
+  const ci = cats.indexOf(cat);
+  if (ci > 0) {
+    const prevCat = cats[ci - 1];
+    if (lvl === 0) return getStars(mode, prevCat, categories[prevCat].total - 1) > 0;
+    return getStars(mode, cat, lvl - 1) > 0;
+  }
+  return true;
+}
+
+// ==================== SCREENS ====================
+function showScreen(id) {
+  if (id !== 'tutorialScreen') stopAnimation();
+  document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (id === 'modeSelectScreen') renderModeSelect();
+  if (id === 'levelSelectScreen') renderLevelSelect();
+  if (id === 'settingsScreen') renderSettings();
+}
+
+function renderModeSelect() {
+  const grid = document.getElementById('modeGrid');
+  grid.innerHTML = '';
+  Object.entries(gameModes).forEach(([key, m]) => {
+    const card = document.createElement('div');
+    card.className = 'mode-card slide-in';
+    card.style.borderColor = m.color + '33';
+    card.innerHTML = `<span class="icon" style="color:${m.color}">${m.icon}</span><div class="name">${m.nameEn}</div><div class="name-zh" style="color:${m.color}">${m.name}</div><div class="desc">${m.desc}</div>`;
+    card.onclick = () => selectMode(key);
+    grid.appendChild(card);
+  });
+}
+
+function selectMode(mode) {
+  state.currentMode = mode;
+  renderLevelSelect();
+  showScreen('levelSelectScreen');
+}
+
+function renderLevelSelect() {
+  const mode = state.currentMode;
+  const m = gameModes[mode];
+  document.getElementById('levelSelectTitle').textContent = m.name;
+  document.getElementById('levelSelectTitle').style.color = m.color;
+  const container = document.getElementById('levelCategories');
+
+  // Arcade mode: show arcade-style UI instead of level grid
+  if (m.arcade) {
+    const highScore = getArcadeHighScore(mode);
+    container.innerHTML = '';
+    // Game description card
+    const descCard = document.createElement('div');
+    descCard.className = 'card fade-in';
+    descCard.style.borderColor = m.color + '33';
+    descCard.style.marginBottom = '15px';
+    descCard.innerHTML = `
+      <div style="text-align:center;margin-bottom:15px">
+        <span style="font-size:2.5rem;display:block;margin-bottom:8px">${m.icon}</span>
+        <h3 style="color:${m.color};margin-bottom:5px">ARCADE MODE</h3>
+        <p style="color:var(--text-dim);font-size:0.9rem">街机模式</p>
+      </div>
+      <div style="background:rgba(0,212,255,0.05);border-radius:8px;padding:15px;margin-bottom:15px">
+        <p style="font-size:0.9rem;color:var(--text);line-height:1.8;margin:0">
+          <strong style="color:${m.color}">游戏规则：</strong><br>
+          - 判断矩阵是对称、反对称还是非对称<br>
+          - 共有 <strong>3 条命</strong>，答错一次失去一条命<br>
+          - 每答对 5 题，难度提升一级（矩阵变大）<br>
+          - 每答对一题得 <strong>10 x 难度</strong> 分，连击额外加分<br>
+          - 追求最高分和最长连击！
+        </p>
+      </div>
+      ${highScore > 0 ? `
+      <div style="text-align:center;margin-bottom:15px;padding:10px;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.2);border-radius:8px">
+        <div style="font-size:0.75rem;color:var(--text-dim)">最高分记录</div>
+        <div style="font-family:'Orbitron',monospace;font-size:1.8rem;font-weight:900;color:var(--warning)">${highScore}</div>
+      </div>` : ''}
+      <div style="display:flex;flex-direction:column;gap:10px;align-items:center">
+        <button class="btn btn-lg btn-success" onclick="startArcadeMode()" style="min-width:200px;font-size:1.1rem">开始挑战</button>
+        <button class="btn btn-sm" onclick="showTutorial('${mode}', function(){ showScreen('levelSelectScreen'); })">查看教程</button>
+      </div>
+    `;
+    container.appendChild(descCard);
+    return;
+  }
+
+  container.innerHTML = '';
+  Object.entries(categories).forEach(([catKey, cat]) => {
+    const section = document.createElement('div');
+    section.className = 'cat-section';
+    section.innerHTML = `<div class="cat-header"><span class="cat-name" style="color:${cat.color}">${cat.nameEn}</span><span class="cat-name-zh">${cat.name}</span><span class="cat-total">${cat.total} 关</span></div>`;
+    const grid = document.createElement('div');
+    grid.className = 'level-grid';
+    for (let i = 0; i < cat.total; i++) {
+      const card = document.createElement('div');
+      const unlocked = isUnlocked(mode, catKey, i);
+      card.className = 'level-card' + (unlocked ? '' : ' locked');
+      const stars = getStars(mode, catKey, i);
+      const starsHtml = unlocked ? `<div class="stars">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>` : '<div style="color:var(--text-dim);font-size:0.8rem;margin-top:4px">🔒</div>';
+      card.innerHTML = `<div class="level-num" style="color:${unlocked ? cat.color : 'var(--text-dim)'}">${i + 1}</div><div class="level-name">${catKey === 'tutorial' ? '教程' : '第' + (i+1) + '关'}</div>${starsHtml}`;
+      if (unlocked) {
+        card.onclick = () => startLevel(catKey, i);
+      }
+      grid.appendChild(card);
+    }
+    section.appendChild(grid);
+    container.appendChild(section);
+  });
+}
+
+// ==================== ARCADE MODE ====================
+function getArcadeHighScore(mode) {
+  try { return parseInt(localStorage.getItem('la_arcade_' + mode)) || 0; } catch(e) { return 0; }
+}
+function setArcadeHighScore(mode, score) {
+  const old = getArcadeHighScore(mode);
+  if (score > old) localStorage.setItem('la_arcade_' + mode, score);
+  return Math.max(score, old);
+}
+
+function startArcadeMode() {
+  const mode = state.currentMode;
+  state.currentCategory = 'arcade';
+  state.currentLevel = 0;
+  state.isTutorial = false;
+  state.score = 0;
+  state.arcadeScore = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.questionIndex = 0;
+  state.correctCount = 0;
+  state.hintsUsed = 0;
+  state.totalQuestions = 999; // effectively infinite
+  state.answers = [];
+  state.answered = false;
+  state.lives = 3;
+  state.difficulty = 1;
+  state.maxDifficulty = 1;
+  state.questions = [];
+  beginArcadeGame();
+}
+
+function beginArcadeGame() {
+  state.startTime = Date.now();
+  state.elapsed = 0;
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimer, 1000);
+  // Generate first question
+  state.questions = [generateOneQuestion(state.currentMode, 'arcade')];
+  showScreen('gameScreen');
+  renderRules();
+  renderQuestion();
+}
+
+function getArcadeCat() {
+  // Map difficulty level to category for question generation
+  if (state.difficulty <= 2) return 'beginner';
+  if (state.difficulty <= 4) return 'intermediate';
+  return 'advanced';
+}
+
+function generateNextArcadeQuestion() {
+  state.questions = [generateOneQuestion(state.currentMode, 'arcade')];
+}
+
+// ==================== TUTORIALS ====================
+const tutorials = {
+  multiplication: {
+    title: '矩阵乘法 · 新手教程',
+    steps: [
+      {
+        text: '什么是矩阵乘法？简单来说，就是把两个"数字表格"按照特定规则合并成一个新的表格。',
+        example: '比如，把下面两个矩阵相乘：\n\n矩阵 A = [1  2]    矩阵 B = [3  0]\n        [0  1]            [1  2]\n\nA × B = ？'
+      },
+      {
+        text: '计算规则：结果中每个数字 = "A 的某一行" 与 "B 的某一列" 配对相乘，再全部加起来。',
+        example: '先算结果【左上角】的数字：\n\n  取 A 的第 1 行 ─→ [ 1 , 2 ]\n  取 B 的第 1 列 ─→ [ 3 ]\n                       [ 1 ]\n\n  配对相乘再相加：\n  1 × 3 + 2 × 1 = 3 + 2 = 5  ✓'
+      },
+      {
+        text: '再算结果【右下角】的数字：',
+        example: '  取 A 的第 2 行 ─→ [ 0 , 1 ]\n  取 B 的第 2 列 ─→ [ 0 ]\n                       [ 2 ]\n\n  配对相乘再相加：\n  0 × 0 + 1 × 2 = 0 + 2 = 2  ✓'
+      },
+      {
+        text: '四个位置都算完，就得到最终结果：',
+        example: '[1  2]   [3  0]   [5  4]\n[0  1] × [1  2] = [1  2]\n\n左上: 1×3+2×1 = 5    右上: 1×0+2×2 = 4\n左下: 0×3+1×1 = 1    右下: 0×0+1×2 = 2'
+      },
+      {
+        text: '记住口诀：取 A 的一行、取 B 的一列，配对相乘再加起来！现在来试试吧 🎯'
+      }
+    ]
+  },
+  determinant: {
+    title: '行列式计算 · 新手教程',
+    steps: [
+      {
+        text: '什么是行列式？它就是把一个方阵（正方形表格）变成一个数字的运算。',
+        example: '比如，求下面矩阵的行列式：\n\n[3  1]\n[2  4]\n\n|A| = ？'
+      },
+      {
+        text: '2×2 矩阵的行列式超简单：主对角线乘积 − 副对角线乘积',
+        example: '[3  1]\n[2  4]\n\n主对角线（左上→右下）: 3 × 4 = 12\n副对角线（右上→左下）: 1 × 2 = 2\n\n行列式 = 12 − 2 = 10  ✓'
+      },
+      {
+        text: '3×3 矩阵用"对角线法则"：复制前两列到右边，三条正斜线相加 减去 三条反斜线相加',
+        example: '[1  0  2]\n[3  1  0]\n[2  4  1]\n\n正斜线之和: 1×1×1 + 0×0×2 + 2×3×4 = 25\n反斜线之和: 2×1×2 + 4×0×1 + 1×3×0 = 4\n行列式 = 25 − 4 = 21  ✓'
+      },
+      {
+        text: '小技巧：行列式 = 0 说明矩阵"不可逆"，这是一个非常重要的性质！考试常考哦 📝'
+      }
+    ]
+  },
+  linearDep: {
+    title: '线性相关性 · 新手教程',
+    steps: [
+      {
+        text: '什么是线性相关？简单来说：如果几个向量中，有一个可以用其他向量"拼"出来，它们就线性相关。',
+        example: '比如向量 a = [1, 2] 和 b = [2, 4]\n\nb = 2 × a，也就是说 b 可以用 a 拼出来\n→ 所以 a 和 b 线性相关 ✓'
+      },
+      {
+        text: '如果没有任何一个向量能用其他向量拼出来，就叫"线性无关"。',
+        example: '比如 a = [1, 0] 和 b = [0, 1]\n\n你没法用一个数乘以 a 得到 b\n→ 所以 a 和 b 线性无关 ✓'
+      },
+      {
+        text: '快速判断方法：两个向量 → 看是否成比例（平行）',
+        example: '[1, 2] 和 [3, 6] → 3/1 = 6/2 = 3 → 成比例 → 相关 ✓\n[1, 2] 和 [2, 3] → 2/1 ≠ 3/2 → 不成比例 → 无关 ✓'
+      },
+      {
+        text: '三个二维向量：因为二维平面最多只能容纳2个"独立方向"，所以3个二维向量一定线性相关！',
+        example: 'a=[1,0], b=[0,1], c=[2,3]\nc = 2a + 3b → c 可以被 a 和 b 拼出\n→ 三个二维向量一定相关 ✓'
+      }
+    ]
+  },
+  inverse: {
+    title: '矩阵求逆 · 新手教程',
+    steps: [
+      {
+        text: '什么是逆矩阵？矩阵 A 的逆矩阵 A⁻¹ 就像是 A 的"反面"，它们相乘会得到单位矩阵 I。',
+        example: 'A × A⁻¹ = I（单位矩阵）\n\n单位矩阵就像数字中的"1"：\n[1  0]\n[0  1]\n任何矩阵乘以 I 都不变'
+      },
+      {
+        text: '2×2 矩阵求逆，只需 3 步：',
+        example: '给定 A = [3  1]\n        [2  4]\n\n第 1 步：算行列式 det = 3×4 − 1×2 = 10\n\n第 2 步：交换对角线，副对角线取负\n  [ 4  −1]\n  [−2   3]\n\n第 3 步：每个元素除以 det\n  [ 0.4  −0.1]\n  [−0.2   0.3]'
+      },
+      {
+        text: '验证一下：A × A⁻¹ 应该等于 I',
+        example: '[3  1]   [ 0.4  −0.1]\n[2  4] × [−0.2   0.3]\n\n= [3×0.4+1×(−0.2)   3×(−0.1)+1×0.3]\n  [2×0.4+4×(−0.2)   2×(−0.1)+4×0.3]\n\n= [1  0]  ✓\n  [0  1]'
+      },
+      {
+        text: '注意：行列式为 0 的矩阵没有逆矩阵（不可逆）！填答案时注意分数要化简 📝'
+      }
+    ]
+  },
+  eigenvalue: {
+    title: '特征值 · 新手教程',
+    steps: [
+      {
+        text: '什么是特征值？想象你拉伸一个图形，有些方向拉伸得多，有些拉伸得少，特征值就描述了"每个方向拉伸了多少倍"。',
+        example: '如果矩阵 A 乘以某个向量 v，结果只是 v 的倍数：\n\nA × v = λ × v\n\n那么 λ 就是特征值，v 就是对应的特征向量'
+      },
+      {
+        text: '怎么求特征值？先列出"特征方程"：',
+        example: '对于矩阵 A = [2  1]\n              [1  2]\n\n特征方程：λ² − tr(A)·λ + det(A) = 0\n\n其中：\n  tr(A) = 2 + 2 = 4（对角线之和，叫"迹"）\n  det(A) = 2×2 − 1×1 = 3（行列式）\n\n所以：λ² − 4λ + 3 = 0'
+      },
+      {
+        text: '解这个一元二次方程（就像高中数学的求根公式）：',
+        example: 'λ² − 4λ + 3 = 0\n\n用求根公式：λ = (4 ± √(16−12)) / 2\n              = (4 ± √4) / 2\n              = (4 ± 2) / 2\n\nλ₁ = 3，λ₂ = 1\n\n所以特征值是 3 和 1  ✓'
+      },
+      {
+        text: '小技巧：对角矩阵的特征值就是对角线上的元素！',
+        example: 'A = [3  0] → 特征值就是 λ₁ = 3，λ₂ = 5\n    [0  5]\n\n因为对角矩阵不改变坐标轴方向，\n只在对角线方向上拉伸！'
+      }
+    ]
+  },
+  transpose: {
+    title: '矩阵转置 · 新手教程',
+    steps: [
+      {
+        text: '什么是转置？把矩阵的行和列互换，就得到转置矩阵 Aᵀ。',
+        example: '比如矩阵 A：\n[1  2  3]\n[4  5  6]\n\nA 是 2行3列，Aᵀ 就是 3行2列：\n[1  4]\n[2  5]\n[3  6]'
+      },
+      {
+        text: '转置规则很简单：原来的第 i 行第 j 列 → 变成第 j 行第 i 列',
+        example: 'A = [1  2  3]    Aᵀ = [1  4]\n    [4  5  6]         [2  5]\n                      [3  6]\n\n原来第1行 [1,2,3] → 变成第1列\n原来第2行 [4,5,6] → 变成第2列'
+      },
+      {
+        text: '转置的重要性质（考试常考）：',
+        example: '(Aᵀ)ᵀ = A        转两次等于没转\n(A+B)ᵀ = Aᵀ + Bᵀ   和的转置等于转置的和\n(kA)ᵀ = kAᵀ       数乘的转置\n(AB)ᵀ = BᵀAᵀ     乘积的转置要反过来！'
+      },
+      {
+        text: '特殊矩阵：如果 Aᵀ = A，则 A 是对称矩阵（关于主对角线对称）',
+        example: 'A = [1  2  3]    Aᵀ = [1  4  7]\n    [4  5  6]         [2  5  8]\n    [7  8  9]         [3  6  9]\n\nA = Aᵀ → 对称矩阵 ✓\n\n对称矩阵的特点：aᵢⱼ = aⱼᵢ'
+      }
+    ]
+  },
+  symmetry: {
+    title: '矩阵对称性 · 新手教程',
+    steps: [
+      {
+        text: '什么是对称矩阵？如果矩阵沿主对角线"折叠"后左右完全重合，就是对称矩阵。',
+        example: '对称矩阵：\n[1  2  3]\n[2  5  6]\n[3  6  9]\n\n注意：a₁₂ = a₂₁ = 2，a₁₃ = a₃₁ = 3，a₂₃ = a₃₂ = 6\n关于主对角线完全对称！'
+      },
+      {
+        text: '判断方法：检查所有 aᵢⱼ 是否等于 aⱼᵢ（i ≠ j 时）',
+        example: 'A = [1  7  3]\n    [7  2  5]\n    [3  5  4]\n\na₁₂=7, a₂₁=7 ✓\na₁₃=3, a₃₁=3 ✓\na₂₃=5, a₃₂=5 ✓\n→ 对称矩阵 ✓'
+      },
+      {
+        text: '反对称矩阵：Aᵀ = -A，即对角线为0，其余 aᵢⱼ = -aⱼᵢ',
+        example: '反对称矩阵：\n[ 0  2  -3]\n[-2  0   4]\n[ 3 -4   0]\n\n对角线全为0\na₁₂=2, a₂₁=-2 → 互为相反数 ✓'
+      },
+      {
+        text: '快速判断技巧：\n• 对称矩阵：转置后等于自身 (Aᵀ = A)\n• 反对称矩阵：转置后等于自身的负 (Aᵀ = -A)\n• 既不对称也不反对称：以上都不满足'
+      }
+    ]
+  },
+  rank: {
+    title: '矩阵的秩 · 新手教程',
+    steps: [
+      {
+        text: '什么是矩阵的秩？秩就是矩阵中"独立的行（或列）的最大个数"。',
+        example: '直观理解：\n如果矩阵有2行互相成比例（一行是另一行的倍数），\n那么独立的行只有1行，秩就是1。'
+      },
+      {
+        text: '求秩的方法：用初等行变换把矩阵化为"行阶梯形"，非零行的个数就是秩。',
+        example: 'A = [1  2  3]\n    [2  4  6]\n    [1  0  1]\n\n第2行减去第1行的2倍：\n[1  2  3]\n[0  0  0]  ← 全零行\n[1  0  1]\n\n第3行减去第1行：\n[1  2  3]\n[0  0  0]\n[0 -2 -2]\n\n非零行有2行 → r(A) = 2'
+      },
+      {
+        text: '秩的重要性质：',
+        example: '• 0 ≤ r(A) ≤ min(行数, 列数)\n• r(A) = 0 当且仅当 A = O（零矩阵）\n• r(Aᵀ) = r(A)\n• r(AB) ≤ min(r(A), r(B))\n• 满秩方阵：r(A) = n → A 可逆'
+      },
+      {
+        text: '快速判断技巧：\n• 如果矩阵所有行（或列）都成比例 → r(A) = 1\n• 如果有一行全为0 → r(A) < 行数\n• 对于方阵：det(A) ≠ 0 → r(A) = n（满秩）'
+      }
+    ]
+  },
+  equation: {
+    title: '线性方程组 · 新手教程',
+    steps: [
+      {
+        text: '线性方程组可以写成矩阵形式 Ax = b，其中 A 是系数矩阵，x 是未知数向量，b 是常数向量。',
+        example: '方程组：\n  x + 2y = 5\n  3x + 4y = 11\n\n矩阵形式：[1  2] [x]   [5 ]\n          [3  4] [y] = [11]'
+      },
+      {
+        text: '克拉默法则：当 det(A) ≠ 0 时，xᵢ = det(Aᵢ) / det(A)',
+        example: 'A = [1  2]    det(A) = 1×4 - 2×3 = -2\n    [3  4]\n\n用 b 替换第1列得到 A₁：\nA₁ = [5  2]    det(A₁) = 5×4 - 2×11 = -2\n     [11 4]\n\nx = det(A₁)/det(A) = -2/-2 = 1'
+      },
+      {
+        text: '同理求 y：用 b 替换第2列得到 A₂',
+        example: 'A₂ = [1  5]    det(A₂) = 1×11 - 5×3 = -4\n     [3  11]\n\ny = det(A₂)/det(A) = -4/-2 = 2\n\n验证：x+2y = 1+4 = 5 ✓\n      3x+4y = 3+8 = 11 ✓'
+      },
+      {
+        text: '注意：det(A) = 0 时不能用克拉默法则！此时方程组可能无解或有无穷多解。',
+        example: '判断方法：\n• det(A) ≠ 0 → 唯一解（用克拉默法则）\n• det(A) = 0 → 无解或无穷多解（需用初等变换判断）'
+      }
+    ]
+  },
+  elementary: {
+    title: '初等变换 · 新手教程',
+    steps: [
+      {
+        text: '初等行变换是线性代数中最基本的操作，有三种类型：',
+        example: '① 交换两行（rᵢ ↔ rⱼ）\n② 用非零常数乘某一行（krᵢ）\n③ 把一行的倍数加到另一行上（rᵢ + krⱼ）'
+      },
+      {
+        text: '初等行变换不改变矩阵的秩！这是最重要的性质。',
+        example: 'A = [1  2  3]\n    [2  4  6]\n    [1  0  1]\n\nr₂ - 2r₁：\n[1  2  3]\n[0  0  0]\n[1  0  1]\n\nr₃ - r₁：\n[1  2  3]\n[0  0  0]\n[0 -2 -2]\n\n秩仍然是2'
+      },
+      {
+        text: '行阶梯形：每行的第一个非零元素（主元）比上一行的更靠右，零行在最下面。',
+        example: '行阶梯形示例：\n[1  2  3  4]\n[0  1  2  3]\n[0  0  1  2]\n[0  0  0  0]\n\n主元用 ★ 标记：\n[★  2  3  4]\n[0  ★  2  3]\n[0  0  ★  2]\n[0  0  0  0]'
+      },
+      {
+        text: '玩法说明：系统会给出一个矩阵和目标行变换操作，你需要计算变换后的结果矩阵。',
+        example: '例题：对下面矩阵执行 r₂ - 2r₁\n\n[1  3]    →    [1   3]\n[2  7]         [0   1]\n\n第2行减去第1行的2倍：\n新r₂ = [2-2×1, 7-2×3] = [0, 1]'
+      }
+    ]
+  }
+};
+
+function showTutorial(mode, callback) {
+  stopAnimation();
+  const tut = tutorials[mode];
+  const container = document.getElementById('tutorialContent');
+  // Only clear tutorial steps, not the animContainer
+  const existingBox = container.querySelector('.tutorial-box');
+  if (existingBox) existingBox.remove();
+  const existingBtns = container.querySelector('.btn-group');
+  if (existingBtns) existingBtns.remove();
+
+  const box = document.createElement('div');
+  box.className = 'tutorial-box fade-in';
+  let html = `<div class="tut-title">${tut.title}</div>`;
+  html += `<div class="tut-progress">共 ${tut.steps.length} 步</div>`;
+  tut.steps.forEach((s, i) => {
+    html += `<div class="step"><div class="step-num">${i + 1}</div><div class="step-content"><div class="step-text">${s.text}</div>`;
+    if (s.example) html += `<div class="example-block">${s.example.replace(/\n/g, '<br>').replace(/→/g, '<span class="arrow">→</span>').replace(/✓/g, '<span class="check">✓</span>')}</div>`;
+    if (s.formula) html += `<div class="formula-block">${s.formula.replace(/\n/g, '<br>')}</div>`;
+    html += `</div></div>`;
+  });
+  box.innerHTML = html;
+  // Insert before animContainer
+  const animContainer = document.getElementById('animContainer');
+  container.insertBefore(box, animContainer);
+
+  const btnGroup = document.createElement('div');
+  btnGroup.className = 'btn-group';
+  btnGroup.style.marginTop = '20px';
+  const startBtn = document.createElement('button');
+  startBtn.className = 'btn btn-success';
+  startBtn.textContent = '我学会了，开始练习';
+  startBtn.onclick = callback;
+  btnGroup.appendChild(startBtn);
+  const backBtn = document.createElement('button');
+  backBtn.className = 'btn btn-sm';
+  backBtn.textContent = '返回';
+  backBtn.onclick = () => { stopAnimation(); showScreen('levelSelectScreen'); };
+  btnGroup.appendChild(backBtn);
+  container.appendChild(btnGroup);
+
+  // Setup animation
+  currentAnimMode = mode;
+  animPhase = 0;
+  if (mode && ['multiplication','determinant','linearDep','inverse','eigenvalue','transpose','symmetry','rank','equation','elementary'].includes(mode)) {
+    animContainer.style.display = 'block';
+    setupAnimCanvas();
+    resetAnimation();
+  } else {
+    animContainer.style.display = 'none';
+  }
+
+  showScreen('tutorialScreen');
+}
+
+// ==================== GAME LOGIC ====================
+function startLevel(catKey, lvl) {
+  state.currentCategory = catKey;
+  state.currentLevel = lvl;
+  state.isTutorial = (catKey === 'tutorial');
+  state.score = 0;
+  state.combo = 0;
+  state.maxCombo = 0;
+  state.questionIndex = 0;
+  state.correctCount = 0;
+  state.hintsUsed = 0;
+  state.totalQuestions = state.isTutorial ? 3 : 5;
+  state.answers = [];
+  state.answered = false;
+
+  if (state.isTutorial) {
+    showTutorial(state.currentMode, () => beginGame());
+  } else {
+    beginGame();
+  }
+}
+
+function beginGame() {
+  state.questions = generateQuestions(state.currentMode, state.currentCategory, state.totalQuestions);
+  state.startTime = Date.now();
+  state.elapsed = 0;
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimer, 1000);
+  // Restore progress bar visibility (may have been hidden in arcade mode)
+  const pb = document.querySelector('.progress-bar');
+  if (pb) pb.style.display = '';
+  showScreen('gameScreen');
+  renderRules();
+  renderQuestion();
+}
+
+function updateTimer() {
+  state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+  document.getElementById('hudTime').textContent = state.elapsed + 's';
+}
+
+function renderRules() {
+  const mode = state.currentMode;
+  const rc = document.getElementById('rulesContent');
+  const tut = tutorials[mode];
+  let html = '';
+  tut.steps.forEach(s => {
+    html += `<p>${s.text}</p>`;
+    if (s.formula) html += `<p class="formula">${s.formula.replace(/\n/g, '  |  ')}</p>`;
+  });
+  rc.innerHTML = html;
+}
+
+function toggleRules() {
+  const c = document.getElementById('rulesContent');
+  const a = document.getElementById('rulesArrow');
+  c.classList.toggle('open');
+  a.textContent = c.classList.contains('open') ? '▲' : '▼';
+}
+
+function generateQuestions(mode, cat, count) {
+  const qs = [];
+  for (let i = 0; i < count; i++) {
+    qs.push(generateOneQuestion(mode, cat));
+  }
+  return qs;
+}
+
+function randInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+function randChoice(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+
+function generateOneQuestion(mode, cat) {
+  switch(mode) {
+    case 'multiplication': return genMultiplication(cat);
+    case 'determinant': return genDeterminant(cat);
+    case 'linearDep': return genLinearDep(cat);
+    case 'inverse': return genInverse(cat);
+    case 'eigenvalue': return genEigenvalue(cat);
+    case 'transpose': return genTranspose(cat);
+    case 'symmetry': return genSymmetry(cat);
+    case 'rank': return genRank(cat);
+    case 'equation': return genEquation(cat);
+    case 'elementary': return genElementary(cat);
+  }
+}
+
+// --- Matrix Multiplication ---
+function matMul(A, B) {
+  const m = A.length, n = B[0].length, p = B.length;
+  const C = [];
+  for (let i = 0; i < m; i++) {
+    C[i] = [];
+    for (let j = 0; j < n; j++) {
+      let s = 0;
+      for (let k = 0; k < p; k++) s += A[i][k] * B[k][j];
+      C[i][j] = s;
+    }
+  }
+  return C;
+}
+
+function genMultiplication(cat) {
+  let A, B, C;
+  let attempts = 0;
+  do {
+    if (cat === 'tutorial' || cat === 'beginner') {
+      A = [[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)]];
+      B = [[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)]];
+    } else if (cat === 'intermediate') {
+      if (Math.random() < 0.5) {
+        A = [[randInt(-3,3), randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3), randInt(-3,3)]];
+        B = [[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)]];
+      } else {
+        A = [[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3)]];
+        B = [[randInt(-3,3), randInt(-3,3), randInt(-3,3)],[randInt(-3,3), randInt(-3,3), randInt(-3,3)]];
+      }
+    } else {
+      A = [[randInt(-4,4), randInt(-4,4), randInt(-4,4)],[randInt(-4,4), randInt(-4,4), randInt(-4,4)],[randInt(-4,4), randInt(-4,4), randInt(-4,4)]];
+      B = [[randInt(-4,4), randInt(-4,4), randInt(-4,4)],[randInt(-4,4), randInt(-4,4), randInt(-4,4)],[randInt(-4,4), randInt(-4,4), randInt(-4,4)]];
+    }
+    C = matMul(A, B);
+    attempts++;
+  } while (attempts < 50 && C.flat().some(v => Math.abs(v) > 100));
+  return { type: 'multiplication', A, B, answer: C };
+}
+
+// --- Determinant ---
+function det2(a, b, c, d) { return a * d - b * c; }
+function det3(M) {
+  return M[0][0]*(M[1][1]*M[2][2]-M[1][2]*M[2][1])
+       - M[0][1]*(M[1][0]*M[2][2]-M[1][2]*M[2][0])
+       + M[0][2]*(M[1][0]*M[2][1]-M[1][1]*M[2][0]);
+}
+
+function genDeterminant(cat) {
+  let M, d;
+  let attempts = 0;
+  do {
+    if (cat === 'tutorial' || cat === 'beginner') {
+      M = [[randInt(-5,5), randInt(-5,5)],[randInt(-5,5), randInt(-5,5)]];
+      d = det2(M[0][0], M[0][1], M[1][0], M[1][1]);
+    } else {
+      const maxVal = cat === 'intermediate' ? 3 : 5;
+      M = [[randInt(-maxVal,maxVal), randInt(-maxVal,maxVal), randInt(-maxVal,maxVal)],
+           [randInt(-maxVal,maxVal), randInt(-maxVal,maxVal), randInt(-maxVal,maxVal)],
+           [randInt(-maxVal,maxVal), randInt(-maxVal,maxVal), randInt(-maxVal,maxVal)]];
+      d = det3(M);
+    }
+    attempts++;
+  } while (attempts < 100 && (d < -50 || d > 50));
+  return { type: 'determinant', matrix: M, answer: d };
+}
+
+// --- Linear Dependence ---
+function genLinearDep(cat) {
+  const isDep = Math.random() < 0.5;
+  let vectors;
+  if (cat === 'tutorial' || cat === 'beginner') {
+    const v1 = [randInt(-5,5), randInt(-5,5)];
+    let v2;
+    if (isDep) {
+      let k = randInt(-3,3);
+      if (k === 0) k = 1;
+      v2 = [v1[0]*k, v1[1]*k];
+      if (v2[0]===0 && v2[1]===0) v2 = [v1[0]*2, v1[1]*2];
+    } else {
+      do { v2 = [randInt(-5,5), randInt(-5,5)]; } while (v1[0]*v2[1] === v1[1]*v2[0]);
+    }
+    vectors = [v1, v2];
+  } else if (cat === 'intermediate') {
+    const v1 = [randInt(-4,4), randInt(-4,4)];
+    const v2 = [randInt(-4,4), randInt(-4,4)];
+    let v3;
+    if (isDep) {
+      const k1 = randInt(-2,2), k2 = randInt(-2,2);
+      if (k1===0 && k2===0) { v3 = [v1[0]+v2[0], v1[1]+v2[1]]; }
+      else { v3 = [v1[0]*k1+v2[0]*k2, v1[1]*k1+v2[1]*k2]; }
+    } else {
+      v3 = [v1[0]*randInt(-2,2)+v2[0]*randInt(-2,2), v1[1]*randInt(-2,2)+v2[1]*randInt(-2,2)];
+    }
+    vectors = [v1, v2, v3];
+  } else {
+    // advanced: 3 vectors in 3D
+    const v1 = [randInt(-3,3), randInt(-3,3), randInt(-3,3)];
+    const v2 = [randInt(-3,3), randInt(-3,3), randInt(-3,3)];
+    let v3;
+    if (isDep) {
+      const k1 = randChoice([-2,-1,1,2]), k2 = randChoice([-2,-1,1,2]);
+      v3 = [v1[0]*k1+v2[0]*k2, v1[1]*k1+v2[1]*k2, v1[2]*k1+v2[2]*k2];
+    } else {
+      // Generate v3 not in span of v1,v2
+      // Cross product of v1,v2 gives a vector not in their span (if v1,v2 are independent)
+      do {
+        v3 = [randInt(-3,3), randInt(-3,3), randInt(-3,3)];
+      } while (isDep3D(v1, v2, v3));
+    }
+    vectors = [v1, v2, v3];
+  }
+  // For intermediate (3 vectors in 2D), always dependent
+  let actualIsDep = isDep;
+  if (cat === 'intermediate') actualIsDep = true; // 3 vectors in 2D always dependent
+  return { type: 'linearDep', vectors, answer: actualIsDep };
+}
+
+function isDep3D(v1, v2, v3) {
+  // Check if v3 is in span of v1, v2 by checking determinant of [v1 v2 v3]
+  const d = v1[0]*(v2[1]*v3[2]-v2[2]*v3[1]) - v1[1]*(v2[0]*v3[2]-v2[2]*v3[0]) + v1[2]*(v2[0]*v3[1]-v2[1]*v3[0]);
+  return d === 0;
+}
+
+// --- Matrix Inverse ---
+function inv2(M) {
+  const d = det2(M[0][0], M[0][1], M[1][0], M[1][1]);
+  if (d === 0) return null;
+  return [[M[1][1]/d, -M[0][1]/d], [-M[1][0]/d, M[0][0]/d]];
+}
+
+function inv3(M) {
+  const d = det3(M);
+  if (d === 0) return null;
+  const adj = [
+    [M[1][1]*M[2][2]-M[1][2]*M[2][1], M[0][2]*M[2][1]-M[0][1]*M[2][2], M[0][1]*M[1][2]-M[0][2]*M[1][1]],
+    [M[1][2]*M[2][0]-M[1][0]*M[2][2], M[0][0]*M[2][2]-M[0][2]*M[2][0], M[0][2]*M[1][0]-M[0][0]*M[1][2]],
+    [M[1][0]*M[2][1]-M[1][1]*M[2][0], M[0][1]*M[2][0]-M[0][0]*M[2][1], M[0][0]*M[1][1]-M[0][1]*M[1][0]]
+  ];
+  return adj.map(row => row.map(v => v / d));
+}
+
+function genInverse(cat) {
+  let M, inv;
+  let attempts = 0;
+  do {
+    if (cat === 'tutorial' || cat === 'beginner') {
+      // det = ±1, ±2
+      const targetDet = randChoice([-2,-1,1,2]);
+      // Generate simple matrix with known det
+      let a, b, c, d;
+      do {
+        a = randInt(-3,3); b = randInt(-3,3); c = randInt(-3,3); d = randInt(-3,3);
+      } while (det2(a,b,c,d) !== targetDet);
+      M = [[a,b],[c,d]];
+      inv = inv2(M);
+    } else if (cat === 'intermediate') {
+      let a, b, c, d;
+      do {
+        a = randInt(-5,5); b = randInt(-5,5); c = randInt(-5,5); d = randInt(-5,5);
+      } while (det2(a,b,c,d) === 0);
+      M = [[a,b],[c,d]];
+      inv = inv2(M);
+    } else {
+      // 3x3 with small values
+      do {
+        M = [[randInt(-3,3),randInt(-3,3),randInt(-3,3)],[randInt(-3,3),randInt(-3,3),randInt(-3,3)],[randInt(-3,3),randInt(-3,3),randInt(-3,3)]];
+        inv = inv3(M);
+      } while (!inv || inv.flat().some(v => !isFinite(v) || Math.abs(v) > 50));
+    }
+    attempts++;
+  } while (attempts < 200 && (!inv || inv.flat().some(v => !isFinite(v))));
+  // Round to reasonable precision
+  const roundedInv = inv.map(row => row.map(v => Math.round(v * 1000) / 1000));
+  return { type: 'inverse', matrix: M, answer: roundedInv, det: cat === 'advanced' ? det3(M) : det2(M[0][0],M[0][1],M[1][0],M[1][1]) };
+}
+
+// --- Eigenvalue ---
+function genEigenvalue(cat) {
+  let a, b, c, d, trace, det, disc, l1, l2;
+  let attempts = 0;
+  do {
+    if (cat === 'tutorial' || cat === 'beginner') {
+      // Integer eigenvalues
+      l1 = randInt(-5,5); l2 = randInt(-5,5);
+      trace = l1 + l2;
+      det = l1 * l2;
+      // A = [[a,b],[c,d]] with a+d=trace, ad-bc=det
+      // Pick a, then d=trace-a, pick b, then c=(a*d-det)/b
+      a = randInt(-3,3);
+      d = trace - a;
+      b = randChoice([-2,-1,1,2]);
+      const bcVal = a * d - det;
+      if (bcVal % b !== 0) { attempts++; continue; }
+      c = bcVal / b;
+      if (Math.abs(c) > 5) { attempts++; continue; }
+    } else {
+      // 1 decimal eigenvalues
+      l1 = Math.round((randInt(-30,30) / 2) * 10) / 10;
+      l2 = Math.round((randInt(-30,30) / 2) * 10) / 10;
+      trace = Math.round((l1 + l2) * 10) / 10;
+      det = Math.round(l1 * l2 * 10) / 10;
+      a = randInt(-4,4);
+      d = Math.round((trace - a) * 10) / 10;
+      b = randChoice([-2,-1,1,2]);
+      const bcVal2 = Math.round((a * d - det) * 10) / 10;
+      if (Math.abs(bcVal2 / b) > 5 || Math.round(bcVal2) % b !== 0) { attempts++; continue; }
+      c = Math.round(bcVal2) / b;
+    }
+    attempts++;
+  } while (attempts < 200 && (Math.abs(c) > 5 || !isFinite(c)));
+
+  if (attempts >= 200) {
+    // Fallback: simple integer eigenvalues
+    l1 = 1; l2 = 2; trace = 3; det = 2;
+    a = 1; d = 2; b = 1; c = 0;
+  }
+
+  const matrix = [[a,b],[c,d]];
+  // Sort eigenvalues
+  const eigenvalues = [Math.min(l1,l2), Math.max(l1,l2)];
+  // Round for display
+  const roundedEigenvalues = eigenvalues.map(v => Math.round(v * 10) / 10);
+  return { type: 'eigenvalue', matrix, trace, det, answer: roundedEigenvalues };
+}
+
+// --- Matrix Transpose ---
+function genTranspose(cat) {
+  let rows, cols, valRange;
+  if (cat === 'tutorial' || cat === 'beginner') {
+    rows = 2; cols = 3; valRange = 5;
+  } else if (cat === 'intermediate') {
+    rows = 3; cols = 3; valRange = 5;
+  } else {
+    rows = 3; cols = 4; valRange = 5;
+  }
+
+  const matrix = [];
+  for (let i = 0; i < rows; i++) {
+    matrix[i] = [];
+    for (let j = 0; j < cols; j++) {
+      matrix[i][j] = randInt(-valRange, valRange);
+    }
+  }
+
+  // Compute transpose
+  const result = [];
+  for (let j = 0; j < cols; j++) {
+    result[j] = [];
+    for (let i = 0; i < rows; i++) {
+      result[j][i] = matrix[i][j];
+    }
+  }
+
+  return { type: 'transpose', matrix, answer: result, resultRows: cols, resultCols: rows };
+}
+
+// --- Matrix Symmetry ---
+function genSymmetry(cat) {
+  let size, valRange;
+  if (cat === 'arcade') {
+    // Arcade mode: use state.difficulty directly
+    if (state.difficulty <= 2) { size = 2; valRange = 3; }
+    else if (state.difficulty <= 4) { size = 3; valRange = 3; }
+    else if (state.difficulty <= 6) { size = 3; valRange = 5; }
+    else { size = 4; valRange = 4; }
+  } else {
+    size = cat === 'tutorial' ? 2 : cat === 'beginner' ? 2 : cat === 'intermediate' ? 3 : 3;
+    valRange = cat === 'advanced' ? 5 : 3;
+  }
+
+  // 随机决定类型：对称(40%)、反对称(30%)、非对称(30%)
+  const rand = Math.random();
+  let matrix, answer;
+
+  if (rand < 0.4) {
+    // 对称矩阵
+    answer = 'symmetric';
+    matrix = [];
+    for (let i = 0; i < size; i++) {
+      matrix[i] = [];
+      for (let j = 0; j < size; j++) {
+        if (i === j) matrix[i][j] = Math.floor(Math.random() * valRange * 2) - valRange;
+        else if (j > i) {
+          const v = Math.floor(Math.random() * valRange * 2) - valRange;
+          matrix[i][j] = v;
+          matrix[j][i] = v;
+        }
+      }
+    }
+  } else if (rand < 0.7) {
+    // 反对称矩阵
+    answer = 'skew-symmetric';
+    matrix = [];
+    for (let i = 0; i < size; i++) {
+      matrix[i] = [];
+      for (let j = 0; j < size; j++) {
+        if (i === j) matrix[i][j] = 0;
+        else if (j > i) {
+          const v = Math.floor(Math.random() * valRange) + 1;
+          matrix[i][j] = v;
+          matrix[j][i] = -v;
+        }
+      }
+    }
+  } else {
+    // 非对称矩阵
+    answer = 'asymmetric';
+    matrix = [];
+    for (let i = 0; i < size; i++) {
+      matrix[i] = [];
+      for (let j = 0; j < size; j++) {
+        matrix[i][j] = Math.floor(Math.random() * valRange * 2) - valRange;
+      }
+    }
+    // 确保不是对称也不是反对称
+    let isSym = true, isSkew = true;
+    for (let i = 0; i < size && (isSym || isSkew); i++) {
+      for (let j = 0; j < size && (isSym || isSkew); j++) {
+        if (matrix[i][j] !== matrix[j][i]) isSym = false;
+        if (i !== j && matrix[i][j] !== -matrix[j][i]) isSkew = false;
+      }
+    }
+    if (isSym || isSkew) {
+      // 修改一个元素使其非对称
+      matrix[0][1] = matrix[0][1] + 1;
+      answer = 'asymmetric';
+    }
+  }
+
+  return { type: 'symmetry', matrix, answer, size };
+}
+
+// --- Matrix Rank ---
+function genRank(cat) {
+  let rows, cols, valRange, targetRank;
+
+  if (cat === 'tutorial') { rows = 2; cols = 3; valRange = 2; targetRank = 1; }
+  else if (cat === 'beginner') { rows = 2; cols = 3; valRange = 3; targetRank = Math.random() < 0.5 ? 1 : 2; }
+  else if (cat === 'intermediate') { rows = 3; cols = 3; valRange = 3; targetRank = Math.floor(Math.random() * 3) + 1; }
+  else { rows = 3; cols = 4; valRange = 4; targetRank = Math.floor(Math.random() * 3) + 1; }
+
+  // 生成指定秩的矩阵
+  // 方法：先生成 targetRank 个线性无关的行，其余行是它们的线性组合
+  const baseRows = [];
+  for (let i = 0; i < targetRank; i++) {
+    const row = [];
+    for (let j = 0; j < cols; j++) {
+      row.push(Math.floor(Math.random() * valRange * 2) - valRange);
+    }
+    baseRows.push(row);
+  }
+
+  const matrix = [...baseRows];
+  for (let i = targetRank; i < rows; i++) {
+    // 生成 baseRows 的随机线性组合
+    const coeffs = [];
+    for (let j = 0; j < targetRank; j++) {
+      coeffs.push(Math.floor(Math.random() * 3) - 1); // -1, 0, 1
+    }
+    const row = [];
+    for (let j = 0; j < cols; j++) {
+      let val = 0;
+      for (let k = 0; k < targetRank; k++) val += coeffs[k] * baseRows[k][j];
+      row.push(val);
+    }
+    matrix.push(row);
+  }
+
+  // 打乱行顺序
+  matrix.sort(() => Math.random() - 0.5);
+
+  return { type: 'rank', matrix, answer: targetRank, rows, cols };
+}
+
+// ==================== RENDER QUESTION ====================
+function renderQuestion() {
+  const q = state.questions[state.questionIndex];
+  state.answered = false;
+  state.questionStartTime = Date.now();
+  const area = document.getElementById('gameArea');
+  area.innerHTML = '';
+
+  const isArcade = state.currentCategory === 'arcade';
+
+  // Update HUD
+  document.getElementById('hudScore').textContent = state.score;
+  document.getElementById('hudCombo').textContent = state.combo;
+
+  if (isArcade) {
+    // Arcade HUD: lives, score, combo, difficulty
+    const hud = document.getElementById('gameHud');
+    hud.innerHTML = `
+      <div class="hud-item"><span class="label">生命</span><span class="value" id="hudLives" style="color:var(--error);font-size:1.1rem">${'❤️'.repeat(state.lives)}${'🖤'.repeat(3 - state.lives)}</span></div>
+      <div class="hud-item"><span class="label">得分</span><span class="value score-val" id="hudScore">${state.score}</span></div>
+      <div class="hud-item"><span class="label">连击</span><span class="value combo-val" id="hudCombo">${state.combo}</span></div>
+      <div class="hud-item"><span class="label">难度</span><span class="value" id="hudDifficulty" style="color:#f472b6">Lv.${state.difficulty}</span></div>
+      <div class="hud-item"><span class="label">时间</span><span class="value time-val" id="hudTime">${state.elapsed}s</span></div>
+    `;
+    // Hide progress bar and hint button in arcade mode
+    document.querySelector('.progress-bar').style.display = 'none';
+    document.getElementById('hintBtn').style.display = 'none';
+  } else {
+    // Normal HUD
+    const hud = document.getElementById('gameHud');
+    hud.innerHTML = `
+      <div class="hud-item"><span class="label">得分</span><span class="value score-val" id="hudScore">${state.score}</span></div>
+      <div class="hud-item"><span class="label">连击</span><span class="value combo-val" id="hudCombo">${state.combo}</span></div>
+      <div class="hud-item"><span class="label">题目</span><span class="value" id="hudProgress">${state.questionIndex + 1}/${state.totalQuestions}</span></div>
+      <div class="hud-item"><span class="label">时间</span><span class="value time-val" id="hudTime">${state.elapsed}s</span></div>
+    `;
+    document.getElementById('hudProgress').textContent = `${state.questionIndex + 1}/${state.totalQuestions}`;
+    document.querySelector('.progress-bar').style.display = '';
+    document.getElementById('progressFill').style.width = `${(state.questionIndex / state.totalQuestions) * 100}%`;
+    // Show hint button
+    document.getElementById('hintBtn').style.display = 'inline-block';
+  }
+
+  switch(q.type) {
+    case 'multiplication': renderMultiplication(q, area); break;
+    case 'determinant': renderDeterminant(q, area); break;
+    case 'linearDep': renderLinearDep(q, area); break;
+    case 'inverse': renderInverse(q, area); break;
+    case 'eigenvalue': renderEigenvalue(q, area); break;
+    case 'transpose': renderTranspose(q, area); break;
+    case 'symmetry': renderSymmetry(q, area); break;
+    case 'rank': renderRank(q, area); break;
+    case 'equation': renderEquation(q, area); break;
+    case 'elementary': renderElementary(q, area); break;
+  }
+
+  // Tutorial guide bubble
+  if (state.isTutorial && state.questionIndex === 0) {
+    addGuideBubble(area);
+  }
+}
+
+function addGuideBubble(area) {
+  setTimeout(() => {
+    const bubble = document.createElement('div');
+    bubble.className = 'guide-bubble';
+    bubble.textContent = '在这里输入你的答案！';
+    const firstInput = area.querySelector('input, .input-cell');
+    if (firstInput) {
+      const rect = firstInput.getBoundingClientRect();
+      const areaRect = area.getBoundingClientRect();
+      bubble.style.left = (rect.left - areaRect.left + rect.width/2 - 60) + 'px';
+      bubble.style.top = (rect.top - areaRect.top - 40) + 'px';
+      area.style.position = 'relative';
+      area.appendChild(bubble);
+      setTimeout(() => bubble.remove(), 5000);
+    }
+  }, 500);
+}
+
+function createMatrixHTML(M, inputCells, cellClass) {
+  const rows = M.length, cols = M[0].length;
+  let html = `<div class="matrix-display" style="grid-template-columns:repeat(${cols},1fr)">`;
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const isInput = inputCells && inputCells[i] && inputCells[i][j];
+      const cls = isInput ? `matrix-cell input-cell ${cellClass||''}` : 'matrix-cell';
+      if (isInput) {
+        html += `<div class="${cls}"><input type="text" data-r="${i}" data-c="${j}" autocomplete="off"></div>`;
+      } else {
+        html += `<div class="${cls}">${M[i][j]}</div>`;
+      }
+    }
+  }
+  html += '</div>';
+  return html;
+}
+
+function renderMultiplication(q, area) {
+  const C = q.answer;
+  const rows = C.length, cols = C[0].length;
+  const inputCells = [];
+  for (let i = 0; i < rows; i++) { inputCells[i] = []; for (let j = 0; j < cols; j++) inputCells[i][j] = true; }
+
+  let html = `<div class="problem-statement">计算矩阵乘法</div>`;
+  html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">`;
+  html += createMatrixHTML(q.A);
+  html += `<span class="op">×</span>`;
+  html += createMatrixHTML(q.B);
+  html += `<span class="op">=</span>`;
+  html += createMatrixHTML(C, inputCells);
+  html += `</div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkMultiplication()">提交答案</button></div>`;
+  area.innerHTML = html;
+
+  // Auto-focus first input
+  const firstInput = area.querySelector('input');
+  if (firstInput) setTimeout(() => firstInput.focus(), 100);
+
+  // Tab navigation
+  setupInputNavigation(area);
+}
+
+function renderDeterminant(q, area) {
+  const M = q.matrix;
+  const size = M.length;
+  let html = `<div class="problem-statement">计算下列矩阵的行列式</div>`;
+  html += createMatrixHTML(M);
+  html += `<div style="margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:1.2rem">det = <input type="text" class="answer-input" id="detInput" autocomplete="off"></div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkDeterminant()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setTimeout(() => document.getElementById('detInput').focus(), 100);
+}
+
+function renderLinearDep(q, area) {
+  let html = `<div class="problem-statement">判断以下向量组是线性相关还是线性无关</div>`;
+  html += `<div style="display:flex;gap:15px;flex-wrap:wrap;justify-content:center;margin:10px 0">`;
+  q.vectors.forEach((v, i) => {
+    html += `<div class="matrix-display" style="grid-template-columns:1fr;min-width:40px">`;
+    html += `<div class="matrix-cell" style="width:50px">v<sub>${i+1}</sub> = (${v.join(', ')})</div>`;
+    html += `</div>`;
+  });
+  html += `</div>`;
+  html += `<div class="judgment-btns">`;
+  html += `<button class="judgment-btn dep" onclick="checkLinearDep(true)">线性相关</button>`;
+  html += `<button class="judgment-btn indep" onclick="checkLinearDep(false)">线性无关</button>`;
+  html += `</div>`;
+  area.innerHTML = html;
+}
+
+function renderInverse(q, area) {
+  const inv = q.answer;
+  const rows = inv.length, cols = inv[0].length;
+  const inputCells = [];
+  for (let i = 0; i < rows; i++) { inputCells[i] = []; for (let j = 0; j < cols; j++) inputCells[i][j] = true; }
+
+  let html = `<div class="problem-statement">求下列矩阵的逆矩阵</div>`;
+  if (q.det !== undefined) {
+    html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:5px">det(A) = ${q.det}</div>`;
+  }
+  html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">`;
+  html += createMatrixHTML(q.matrix);
+  html += `<span class="op" style="font-size:1.5rem">→</span>`;
+  html += createMatrixHTML(inv, inputCells);
+  html += `</div>`;
+  html += `<div style="font-size:0.8rem;color:var(--text-dim);margin:5px 0">提示：输入分数请用小数表示（如 0.5 表示 1/2）</div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkInverse()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setupInputNavigation(area);
+}
+
+function renderEigenvalue(q, area) {
+  let html = `<div class="problem-statement">求下列矩阵的特征值</div>`;
+  html += createMatrixHTML(q.matrix);
+  html += `<div class="eigen-eq">特征方程：λ² - <span class="blank">${q.trace}</span>λ + <span class="blank">${q.det}</span> = 0</div>`;
+  html += `<div class="eigen-inputs">`;
+  html += `<label>λ₁ = <input type="text" id="eigen1" autocomplete="off"></label>`;
+  html += `<label>λ₂ = <input type="text" id="eigen2" autocomplete="off"></label>`;
+  html += `</div>`;
+  html += `<div style="font-size:0.8rem;color:var(--text-dim);margin:5px 0">（请按从小到大顺序输入）</div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkEigenvalue()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setTimeout(() => document.getElementById('eigen1').focus(), 100);
+}
+
+function renderTranspose(q, area) {
+  const result = q.answer;
+  const rows = result.length, cols = result[0].length;
+  const inputCells = [];
+  for (let i = 0; i < rows; i++) { inputCells[i] = []; for (let j = 0; j < cols; j++) inputCells[i][j] = true; }
+
+  const origRows = q.matrix.length, origCols = q.matrix[0].length;
+
+  let html = `<div class="problem-statement">计算下列矩阵的转置 Aᵀ</div>`;
+  html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:5px">A 是 ${origRows}×${origCols} 矩阵，Aᵀ 是 ${rows}×${cols} 矩阵</div>`;
+  html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">`;
+  html += createMatrixHTML(q.matrix);
+  html += `<span class="op" style="font-size:1.3rem">→</span>`;
+  html += `<span style="font-family:'Orbitron',monospace;font-size:1.1rem;color:var(--text-dim)">Aᵀ</span>`;
+  html += `<span class="op">=</span>`;
+  html += createMatrixHTML(result, inputCells);
+  html += `</div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkTranspose()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setupInputNavigation(area);
+}
+
+function renderSymmetry(q, area) {
+  let html = `<div class="problem-statement">判断下列矩阵的对称类型</div>`;
+  html += createMatrixHTML(q.matrix);
+  html += `<div class="judgment-btns">`;
+  html += `<button class="judgment-btn" style="border-color:#f472b6;color:#f472b6;background:rgba(244,114,182,0.1)" onclick="checkSymmetry('symmetric')">对称矩阵</button>`;
+  html += `<button class="judgment-btn" style="border-color:#00d4ff;color:#00d4ff;background:rgba(0,212,255,0.1)" onclick="checkSymmetry('skew-symmetric')">反对称矩阵</button>`;
+  html += `<button class="judgment-btn" style="border-color:#ff6b35;color:#ff6b35;background:rgba(255,107,53,0.1)" onclick="checkSymmetry('asymmetric')">非对称矩阵</button>`;
+  html += `</div>`;
+  area.innerHTML = html;
+}
+
+function renderRank(q, area) {
+  let html = `<div class="problem-statement">求下列矩阵的秩</div>`;
+  html += `<div style="font-size:0.85rem;color:var(--text-dim);margin-bottom:5px">${q.rows}×${q.cols} 矩阵</div>`;
+  html += createMatrixHTML(q.matrix);
+  html += `<div style="margin:10px 0;font-family:'JetBrains Mono',monospace;font-size:1.2rem">r(A) = <input type="text" class="answer-input" id="rankInput" autocomplete="off" style="width:80px"></div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkRank()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setTimeout(() => document.getElementById('rankInput').focus(), 100);
+}
+
+function setupInputNavigation(area) {
+  const inputs = area.querySelectorAll('input[data-r]');
+  inputs.forEach((inp, idx) => {
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === 'Tab') {
+        e.preventDefault();
+        const next = inputs[idx + 1];
+        if (next) next.focus();
+        else {
+          // Submit
+          const q = state.questions[state.questionIndex];
+          if (q.type === 'multiplication') checkMultiplication();
+          else if (q.type === 'inverse') checkInverse();
+          else if (q.type === 'transpose') checkTranspose();
+          else if (q.type === 'equation') checkEquation();
+          else if (q.type === 'elementary') checkElementary();
+        }
+      }
+    });
+  });
+}
+
+// ==================== CHECK ANSWERS ====================
+function checkMatrixInputs(q, tolerance, showAnswer) {
+  const inputs = document.querySelectorAll('#gameArea input[data-r]');
+  let allCorrect = true;
+  let correctCount = 0;
+  inputs.forEach(inp => {
+    const r = parseInt(inp.dataset.r), c = parseInt(inp.dataset.c);
+    const val = parseFloat(inp.value);
+    const correct = q.answer[r][c];
+    const cell = inp.parentElement;
+    if (isNaN(val) || Math.abs(val - correct) > tolerance) {
+      allCorrect = false;
+      cell.classList.add('wrong');
+      if (showAnswer) inp.value = correct;
+    } else {
+      cell.classList.add('correct');
+      correctCount++;
+    }
+    inp.disabled = true;
+  });
+  return { allCorrect, correctCount, total: inputs.length };
+}
+
+function checkMultiplication() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const { allCorrect } = checkMatrixInputs(q, 0.01, false);
+  state.answered = true;
+  processAnswer(allCorrect, q);
+}
+
+function checkSymmetry(userAnswer) {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const correct = (userAnswer === q.answer);
+  const btns = document.querySelectorAll('.judgment-btn');
+  btns.forEach(b => b.style.pointerEvents = 'none');
+  const answerMap = { 'symmetric': 0, 'skew-symmetric': 1, 'asymmetric': 2 };
+  const userIdx = answerMap[userAnswer];
+  const correctIdx = answerMap[q.answer];
+  if (correct) {
+    btns[userIdx].classList.add('selected-correct');
+  } else {
+    btns[userIdx].classList.add('selected-wrong');
+    btns[correctIdx].classList.add('selected-correct');
+  }
+  state.answered = true;
+  processAnswer(correct, q);
+}
+
+function checkRank() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const inp = document.getElementById('rankInput');
+  const val = parseInt(inp.value);
+  const correct = val === q.answer;
+  inp.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    inp.value = q.answer;
+    inp.classList.add('wrong');
+  }
+  state.answered = true;
+  processAnswer(correct, q);
+}
+
+function checkDeterminant() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const inp = document.getElementById('detInput');
+  const val = parseFloat(inp.value);
+  const correct = Math.abs(val - q.answer) < 0.01;
+  inp.classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    inp.value = q.answer;
+    inp.classList.add('wrong');
+  }
+  state.answered = true;
+  processAnswer(correct, q);
+}
+
+function checkLinearDep(userSaysDep) {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const correct = (userSaysDep === q.answer);
+  const btns = document.querySelectorAll('.judgment-btn');
+  btns.forEach(b => b.style.pointerEvents = 'none');
+  if (correct) {
+    btns[userSaysDep ? 0 : 1].classList.add('selected-correct');
+  } else {
+    btns[userSaysDep ? 0 : 1].classList.add('selected-wrong');
+    btns[q.answer ? 0 : 1].classList.add('selected-correct');
+  }
+  state.answered = true;
+  processAnswer(correct, q);
+}
+
+function checkInverse() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const { allCorrect } = checkMatrixInputs(q, 0.05, true);
+  state.answered = true;
+  processAnswer(allCorrect, q);
+}
+
+function checkEigenvalue() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const v1 = parseFloat(document.getElementById('eigen1').value);
+  const v2 = parseFloat(document.getElementById('eigen2').value);
+  const correct = !isNaN(v1) && !isNaN(v2) &&
+    Math.abs(v1 - q.answer[0]) < 0.15 && Math.abs(v2 - q.answer[1]) < 0.15;
+  document.getElementById('eigen1').classList.add(correct ? 'correct' : 'wrong');
+  document.getElementById('eigen2').classList.add(correct ? 'correct' : 'wrong');
+  if (!correct) {
+    document.getElementById('eigen1').value = q.answer[0];
+    document.getElementById('eigen2').value = q.answer[1];
+  }
+  state.answered = true;
+  processAnswer(correct, q);
+}
+
+function checkTranspose() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const { allCorrect } = checkMatrixInputs(q, 0.5, true);
+  state.answered = true;
+  processAnswer(allCorrect, q);
+}
+
+function processAnswer(correct, q) {
+  const isArcade = state.currentCategory === 'arcade';
+
+  if (correct) {
+    state.combo++;
+    state.correctCount++;
+    if (state.combo > state.maxCombo) state.maxCombo = state.combo;
+
+    if (isArcade) {
+      // Arcade scoring: 10 * difficulty + combo bonus
+      const points = 10 * state.difficulty + state.combo * 5;
+      state.score += points;
+      state.arcadeScore = state.score;
+
+      // Check difficulty increase: every 5 correct answers
+      if (state.correctCount % 5 === 0) {
+        state.difficulty++;
+        if (state.difficulty > state.maxDifficulty) state.maxDifficulty = state.difficulty;
+      }
+    } else {
+      const timeBonus = Math.max(0, 5 - Math.floor((Date.now() - state.questionStartTime) / 1000));
+      const comboMultiplier = 1 + (state.combo - 1) * 0.2;
+      const points = Math.round((10 + timeBonus) * comboMultiplier);
+      state.score += points;
+    }
+    spawnParticles(true);
+    if (state.combo >= 3) showComboGlow(state.combo);
+  } else {
+    state.combo = 0;
+    spawnShockwave();
+
+    if (isArcade) {
+      state.lives--;
+      if (state.lives <= 0) {
+        // Game over
+        state.answered = true;
+        // Update HUD to show 0 lives
+        const livesEl = document.getElementById('hudLives');
+        if (livesEl) livesEl.innerHTML = '🖤🖤🖤';
+        document.getElementById('hudScore').textContent = state.score;
+        document.getElementById('hudCombo').textContent = state.combo;
+        setTimeout(() => endGame(), 1500);
+        return;
+      }
+    }
+  }
+
+  // Update HUD
+  const scoreEl = document.getElementById('hudScore');
+  const comboEl = document.getElementById('hudCombo');
+  if (scoreEl) scoreEl.textContent = state.score;
+  if (comboEl) comboEl.textContent = state.combo;
+
+  // Update lives display in arcade mode
+  if (isArcade) {
+    const livesEl = document.getElementById('hudLives');
+    if (livesEl) livesEl.innerHTML = '❤️'.repeat(state.lives) + '🖤'.repeat(3 - state.lives);
+    const diffEl = document.getElementById('hudDifficulty');
+    if (diffEl) diffEl.textContent = 'Lv.' + state.difficulty;
+  }
+
+  // Disable hint button
+  document.getElementById('hintBtn').style.display = 'none';
+
+  // Next question or result
+  setTimeout(() => {
+    state.questionIndex++;
+    if (isArcade) {
+      // Arcade: generate next question (infinite mode)
+      if (state.lives > 0) {
+        generateNextArcadeQuestion();
+        renderQuestion();
+      }
+    } else if (state.questionIndex >= state.totalQuestions) {
+      endGame();
+    } else {
+      renderQuestion();
+    }
+  }, correct ? 800 : 1500);
+}
+
+function useHint() {
+  if (state.answered) return;
+  state.hintsUsed++;
+  state.score = Math.max(0, state.score - 5);
+  document.getElementById('hudScore').textContent = state.score;
+
+  const q = state.questions[state.questionIndex];
+  switch(q.type) {
+    case 'multiplication': case 'inverse': case 'transpose': case 'elementary': {
+      const inputs = document.querySelectorAll('#gameArea input[data-r]');
+      const unfilled = [...inputs].filter(inp => !inp.value && inp.parentElement && !inp.parentElement.classList.contains('revealed'));
+      if (unfilled.length > 0) {
+        const cell = unfilled[Math.floor(Math.random() * unfilled.length)];
+        const r = parseInt(cell.dataset.r), c = parseInt(cell.dataset.c);
+        cell.value = q.answer[r][c];
+        cell.parentElement.classList.add('revealed');
+        cell.disabled = true;
+      }
+      break;
+    }
+    case 'determinant': {
+      const inp = document.getElementById('detInput');
+      if (inp.value === '') {
+        inp.value = q.answer;
+        inp.parentElement && inp.classList.add('revealed');
+        inp.disabled = true;
+        state.answered = true;
+        processAnswer(true, q);
+      }
+      break;
+    }
+    case 'eigenvalue': {
+      const e1 = document.getElementById('eigen1');
+      const e2 = document.getElementById('eigen2');
+      if (e1.value === '') { e1.value = q.answer[0]; e1.classList.add('revealed'); e1.disabled = true; }
+      else if (e2.value === '') { e2.value = q.answer[1]; e2.classList.add('revealed'); e2.disabled = true; }
+      break;
+    }
+    case 'linearDep': {
+      // For linear dep, hint just tells the answer
+      const btns = document.querySelectorAll('.judgment-btn');
+      btns.forEach(b => b.style.pointerEvents = 'none');
+      btns[q.answer ? 0 : 1].style.boxShadow = `0 0 15px ${q.answer ? 'var(--error)' : 'var(--success)'}`;
+      break;
+    }
+    case 'symmetry': {
+      const btns = document.querySelectorAll('.judgment-btn');
+      btns.forEach(b => b.style.pointerEvents = 'none');
+      const answerMap = { 'symmetric': 0, 'skew-symmetric': 1, 'asymmetric': 2 };
+      const correctIdx = answerMap[q.answer];
+      btns[correctIdx].style.boxShadow = '0 0 15px var(--success)';
+      break;
+    }
+    case 'rank': {
+      const inp = document.getElementById('rankInput');
+      if (inp.value === '') {
+        inp.value = q.answer;
+        inp.classList.add('revealed');
+        inp.disabled = true;
+        state.answered = true;
+        processAnswer(true, q);
+      }
+      break;
+    }
+    case 'equation': {
+      const inputs = document.querySelectorAll('#gameArea input[data-r]');
+      const unfilled = [...inputs].filter(i => i.value === '');
+      if (unfilled.length > 0) {
+        const cell = unfilled[Math.floor(Math.random() * unfilled.length)];
+        const idx = parseInt(cell.dataset.r);
+        cell.value = q.answer[idx];
+        cell.classList.add('revealed');
+        cell.disabled = true;
+      }
+      break;
+    }
+  }
+}
+
+// ==================== END GAME ====================
+function endGame() {
+  clearInterval(state.timerInterval);
+  const isArcade = state.currentCategory === 'arcade';
+
+  if (isArcade) {
+    // Arcade mode: save high score, show arcade result
+    const finalScore = setArcadeHighScore(state.currentMode, state.score);
+    const isNewRecord = state.score >= finalScore && state.score > 0;
+    showTransition('游戏结束！', isNewRecord ? '新纪录！' : '再来一局！', () => {
+      showArcadeResult(finalScore, isNewRecord);
+    });
+    if (isNewRecord) spawnConfetti();
+    return;
+  }
+
+  document.getElementById('progressFill').style.width = '100%';
+
+  // Calculate stars
+  const accuracy = state.correctCount / state.totalQuestions;
+  let stars = 0;
+  if (accuracy >= 0.9) stars = 3;
+  else if (accuracy >= 0.6) stars = 2;
+  else if (accuracy >= 0.3) stars = 1;
+
+  // Save progress
+  if (!state.isTutorial) {
+    setStars(state.currentMode, state.currentCategory, state.currentLevel, stars);
+  } else {
+    setStars(state.currentMode, 'tutorial', 0, Math.max(stars, 1));
+  }
+
+  // Show transition
+  showTransition(stars >= 2 ? '关卡通过！' : '继续加油！', stars >= 2 ? '表现出色！' : '多练习就能进步', () => {
+    showResult(stars);
+  });
+
+  if (stars >= 2) spawnConfetti();
+}
+
+function showArcadeResult(highScore, isNewRecord) {
+  const card = document.getElementById('resultCard');
+  const modeName = gameModes[state.currentMode].name;
+  const m = gameModes[state.currentMode];
+  const timeStr = state.elapsed + '秒';
+
+  card.innerHTML = `
+    <h2 style="color:${m.color}">游戏结束</h2>
+    <div style="font-size:0.85rem;color:var(--text-dim)">${modeName} - 街机模式</div>
+    ${isNewRecord ? '<div style="font-size:0.9rem;color:var(--warning);margin:8px 0;font-weight:700">NEW RECORD!</div>' : ''}
+    <div class="big-score">${state.score}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">答对题数</div><div class="stat-value">${state.correctCount}</div></div>
+      <div class="stat"><div class="stat-label">最高连击</div><div class="stat-value" style="color:var(--accent)">${state.maxCombo}</div></div>
+      <div class="stat"><div class="stat-label">最高难度</div><div class="stat-value" style="color:${m.color}">Lv.${state.maxDifficulty}</div></div>
+      <div class="stat"><div class="stat-label">用时</div><div class="stat-value">${timeStr}</div></div>
+    </div>
+    <div style="text-align:center;margin:10px 0;padding:8px;background:rgba(255,204,0,0.08);border:1px solid rgba(255,204,0,0.2);border-radius:8px">
+      <div style="font-size:0.75rem;color:var(--text-dim)">历史最高分</div>
+      <div style="font-family:'Orbitron',monospace;font-size:1.3rem;font-weight:700;color:var(--warning)">${highScore}</div>
+    </div>
+    <div class="btn-group">
+      <button class="btn btn-lg btn-success" onclick="startArcadeMode()">再来一局</button>
+      <button class="btn btn-sm" onclick="showScreen('levelSelectScreen')">返回</button>
+    </div>
+  `;
+  showScreen('resultScreen');
+}
+
+function showResult(stars) {
+  const card = document.getElementById('resultCard');
+  const modeName = gameModes[state.currentMode].name;
+  const catName = categories[state.currentCategory]?.name || '教程';
+  const timeStr = state.elapsed + '秒';
+  const passed = stars >= 2;
+
+  // Check if there's a next level
+  const cat = categories[state.currentCategory];
+  const hasNext = cat && state.currentLevel < cat.total - 1;
+  const nextCatKey = state.currentCategory;
+  const nextLvl = state.currentLevel + 1;
+
+  card.innerHTML = `
+    <h2 style="color:${passed ? 'var(--success)' : 'var(--accent)'}">${passed ? '恭喜过关！' : '再接再厉！'}</h2>
+    <div style="font-size:0.85rem;color:var(--text-dim)">${modeName} - ${catName}</div>
+    <div class="stars-display">${'★'.repeat(stars)}${'☆'.repeat(3 - stars)}</div>
+    <div class="big-score">${state.score}</div>
+    <div class="stats">
+      <div class="stat"><div class="stat-label">正确率</div><div class="stat-value">${Math.round(state.correctCount / state.totalQuestions * 100)}%</div></div>
+      <div class="stat"><div class="stat-label">用时</div><div class="stat-value">${timeStr}</div></div>
+      <div class="stat"><div class="stat-label">最高连击</div><div class="stat-value">${state.maxCombo}</div></div>
+      <div class="stat"><div class="stat-label">使用提示</div><div class="stat-value">${state.hintsUsed}次</div></div>
+    </div>
+    <div class="btn-group">
+      ${hasNext ? `<button class="btn btn-success" onclick="startLevel('${nextCatKey}', ${nextLvl})">下一关 →</button>` : ''}
+      <button class="btn" onclick="startLevel('${state.currentCategory}', ${state.currentLevel})">重新挑战</button>
+      <button class="btn btn-sm" onclick="showScreen('levelSelectScreen')">选择关卡</button>
+    </div>
+  `;
+  showScreen('resultScreen');
+}
+
+function confirmExit() {
+  if (state.currentCategory === 'arcade') {
+    if (confirm('确定要退出街机模式吗？当前进度将不会保存。')) {
+      clearInterval(state.timerInterval);
+      showScreen('levelSelectScreen');
+    }
+  } else {
+    if (confirm('确定要退出当前关卡吗？进度将不会保存。')) {
+      clearInterval(state.timerInterval);
+      showScreen('levelSelectScreen');
+    }
+  }
+}
+
+function openGameSettings() {
+  // Pause the game timer
+  if (state.timerInterval) {
+    clearInterval(state.timerInterval);
+    state.timerPaused = true;
+    state.pauseTime = Date.now(); // Record when we paused
+  }
+  const isArcade = state.currentCategory === 'arcade';
+  const overlay = document.getElementById('gameSettingsOverlay');
+  // Update button text for arcade mode
+  const btns = overlay.querySelectorAll('button');
+  if (btns[1]) btns[1].textContent = isArcade ? '重新开始' : '重新开始本关';
+  if (btns[2]) btns[2].textContent = isArcade ? '退出街机模式' : '退出到关卡选择';
+  overlay.style.display = 'flex';
+}
+
+function resumeGame() {
+  document.getElementById('gameSettingsOverlay').style.display = 'none';
+  // Resume the game timer, adjusting startTime to account for pause duration
+  if (state.timerPaused) {
+    const pauseDuration = Date.now() - state.pauseTime;
+    state.startTime += pauseDuration; // Shift startTime forward
+    state.timerInterval = setInterval(() => {
+      state.elapsed = Math.floor((Date.now() - state.startTime) / 1000);
+      document.getElementById('hudTime').textContent = state.elapsed + 's';
+    }, 1000);
+    state.timerPaused = false;
+  }
+}
+
+function restartCurrentLevel() {
+  document.getElementById('gameSettingsOverlay').style.display = 'none';
+  state.timerPaused = false;
+  if (state.currentCategory === 'arcade') {
+    startArcadeMode();
+  } else {
+    startLevel(state.currentCategory, state.currentLevel);
+  }
+}
+
+function quitToLevelSelect() {
+  document.getElementById('gameSettingsOverlay').style.display = 'none';
+  state.timerPaused = false;
+  clearInterval(state.timerInterval);
+  // Restore progress bar visibility (may have been hidden in arcade mode)
+  const pb = document.querySelector('.progress-bar');
+  if (pb) pb.style.display = '';
+  showScreen('levelSelectScreen');
+}
+
+function quitToModeSelect() {
+  document.getElementById('gameSettingsOverlay').style.display = 'none';
+  state.timerPaused = false;
+  clearInterval(state.timerInterval);
+  showScreen('modeSelectScreen');
+}
+
+// ==================== TRANSITIONS ====================
+function showTransition(text, sub, callback) {
+  const overlay = document.getElementById('transitionOverlay');
+  document.getElementById('transText').textContent = text;
+  document.getElementById('transSub').textContent = sub;
+  overlay.classList.add('active');
+  setTimeout(() => {
+    overlay.classList.remove('active');
+    if (callback) callback();
+  }, 1500);
+}
+
+// ==================== EFFECTS ====================
+function spawnParticles(success) {
+  const container = document.getElementById('particleContainer');
+  const color = success ? 'var(--success)' : 'var(--error)';
+  for (let i = 0; i < 15; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    const size = Math.random() * 8 + 4;
+    const dx = (Math.random() - 0.5) * 200;
+    const dy = (Math.random() - 0.5) * 200;
+    p.style.cssText = `width:${size}px;height:${size}px;background:${color};left:50%;top:50%;--dx:${dx}px;--dy:${dy}px;`;
+    container.appendChild(p);
+    setTimeout(() => p.remove(), 1000);
+  }
+}
+
+function spawnShockwave() {
+  const sw = document.createElement('div');
+  sw.className = 'shockwave';
+  document.body.appendChild(sw);
+  setTimeout(() => sw.remove(), 600);
+}
+
+function spawnConfetti() {
+  const colors = ['#00d4ff','#ff6b35','#00ff88','#ff3366','#ffcc00'];
+  for (let i = 0; i < 50; i++) {
+    const c = document.createElement('div');
+    c.className = 'confetti';
+    c.style.cssText = `left:${Math.random()*100}%;width:${Math.random()*8+5}px;height:${Math.random()*8+5}px;background:${randChoice(colors)};animation-delay:${Math.random()*1}s;animation-duration:${Math.random()*1.5+1.5}s;border-radius:${Math.random()>0.5?'50%':'0'};`;
+    document.body.appendChild(c);
+    setTimeout(() => c.remove(), 3000);
+  }
+}
+
+function showComboGlow(combo) {
+  const g = document.createElement('div');
+  g.className = 'combo-glow';
+  g.textContent = `${combo} COMBO!`;
+  document.body.appendChild(g);
+  setTimeout(() => g.remove(), 1000);
+}
+
+// ==================== SETTINGS ====================
+function setDifficulty(diff) {
+  state.difficulty = diff;
+  document.querySelectorAll('.diff-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.diff === diff);
+  });
+}
+
+function renderSettings() {
+  document.querySelectorAll('.diff-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.diff === state.difficulty);
+  });
+}
+
+function replayTutorial() {
+  if (state.currentMode) {
+    showTutorial(state.currentMode, () => showScreen('settingsScreen'));
+  } else {
+    alert('请先选择一个游戏模式');
+  }
+}
+
+// ==================== TUTORIAL CANVAS ANIMATION ====================
+let animFrame = null;
+let animPhase = 0;
+let animTimer = null;
+let currentAnimMode = null;
+let animCanvas, animCtx;
+let animDPR = 1;
+let animCaptionEl = null;
+let phaseStartTime = 0;
+const ANIM_W = 480, ANIM_H = 280;
+let isPaused = false;
+let isPlaying = false;
+let pausedPhase = 0;
+let pausedTime = 0;
+
+// Easing functions
+function easeInOut(t) {
+  return t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+}
+function easeOutBounce(t) {
+  if (t < 1/2.75) return 7.5625*t*t;
+  else if (t < 2/2.75) { t -= 1.5/2.75; return 7.5625*t*t + 0.75; }
+  else if (t < 2.5/2.75) { t -= 2.25/2.75; return 7.5625*t*t + 0.9375; }
+  else { t -= 2.625/2.75; return 7.5625*t*t + 0.984375; }
+}
+function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+function easeInCubic(t) { return t * t * t; }
+
+function setupAnimCanvas() {
+  animCanvas = document.getElementById('animCanvas');
+  animCtx = animCanvas.getContext('2d');
+  animCaptionEl = document.getElementById('animCaption');
+  animDPR = window.devicePixelRatio || 1;
+  animCanvas.width = ANIM_W * animDPR;
+  animCanvas.height = ANIM_H * animDPR;
+  animCanvas.style.width = ANIM_W + 'px';
+  animCanvas.style.height = ANIM_H + 'px';
+  animCtx.setTransform(animDPR, 0, 0, animDPR, 0, 0);
+}
+
+function togglePause() {
+  try {
+  if (!isPlaying) {
+    // Not started yet, play
+    playAnimation();
+    return;
+  }
+  if (isPaused) {
+    // Resume
+    isPaused = false;
+    document.getElementById('animPlayBtn').textContent = '暂停';
+    // Restore phaseStartTime to account for paused time
+    phaseStartTime = Date.now() - pausedTime;
+    // Restart the animation loop
+    function animLoop() {
+      if (!currentAnimMode || isPaused) return;
+      animCtx.clearRect(0, 0, ANIM_W, ANIM_H);
+      drawAnimPhase(animPhase);
+      animFrame = requestAnimationFrame(animLoop);
+    }
+    animLoop();
+    // Restart the phase timer
+    const remainingTime = 2500 - pausedTime;
+    animTimer = setTimeout(() => {
+      if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+      animPhase++;
+      runAnimPhase();
+    }, remainingTime);
+  } else {
+    // Pause
+    isPaused = true;
+    pausedTime = Date.now() - phaseStartTime;
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+    document.getElementById('animPlayBtn').textContent = '继续';
+  }
+  } catch(e) { console.error('togglePause error:', e); }
+}
+
+function playAnimation() {
+  try {
+  stopAnimation();
+  isPaused = false;
+  isPlaying = true;
+  pausedTime = 0;
+  animPhase = 0;
+  document.getElementById('animPlayBtn').textContent = '暂停';
+  runAnimPhase();
+  } catch(e) { console.error('playAnimation error:', e); }
+}
+
+function resetAnimation() {
+  stopAnimation();
+  isPaused = false;
+  pausedTime = 0;
+  pausedPhase = 0;
+  animPhase = 0;
+  document.getElementById('animPlayBtn').textContent = '播放演示';
+  animCaptionEl.textContent = '';
+  if (animCtx) {
+    animCtx.clearRect(0, 0, ANIM_W, ANIM_H);
+    drawAnimPhase(0);
+  }
+}
+
+function stopAnimation() {
+  if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+  if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+  isPaused = false;
+  isPlaying = false;
+  pausedTime = 0;
+  const btn = document.getElementById('animPlayBtn');
+  if (btn) { btn.textContent = '播放演示'; }
+}
+
+function runAnimPhase() {
+  try {
+  if (!currentAnimMode) return;
+  const maxPhases = { multiplication: 5, determinant: 5, linearDep: 5, inverse: 5, eigenvalue: 5, transpose: 5, symmetry: 5, rank: 5, equation: 5, elementary: 5 };
+  const max = maxPhases[currentAnimMode] || 5;
+  if (animPhase >= max) {
+    stopAnimation();
+    return;
+  }
+  phaseStartTime = Date.now();
+  // Use requestAnimationFrame for smooth animation within each phase
+  function animLoop() {
+    if (!currentAnimMode || isPaused) return;
+    animCtx.clearRect(0, 0, ANIM_W, ANIM_H);
+    drawAnimPhase(animPhase);
+    animFrame = requestAnimationFrame(animLoop);
+  }
+  animLoop();
+  // Move to next phase after 2.5 seconds
+  animTimer = setTimeout(() => {
+    if (animFrame) { cancelAnimationFrame(animFrame); animFrame = null; }
+    animPhase++;
+    runAnimPhase();
+  }, 2500);
+  } catch(e) { console.error('runAnimPhase error:', e); }
+}
+
+function drawAnimPhase(phase) {
+  try {
+  if (!animCtx) return;
+  animCtx.clearRect(0, 0, ANIM_W, ANIM_H);
+  switch (currentAnimMode) {
+    case 'multiplication': drawMultiplicationAnim(phase); break;
+    case 'determinant': drawDeterminantAnim(phase); break;
+    case 'linearDep': drawLinearDepAnim(phase); break;
+    case 'inverse': drawInverseAnim(phase); break;
+    case 'eigenvalue': drawEigenvalueAnim(phase); break;
+    case 'transpose': drawTransposeAnim(phase); break;
+    case 'symmetry': drawSymmetryAnim(phase); break;
+    case 'rank': drawRankAnim(phase); break;
+    case 'equation': drawEquationAnim(phase); break;
+    case 'elementary': drawElementaryAnim(phase); break;
+  }
+  } catch(e) { console.error('drawAnimPhase error:', e); }
+}
+
+// ===== Animation 1: Matrix Multiplication =====
+function drawMultiplicationAnim(phase) {
+  const ctx = animCtx;
+  const A = [[1,2],[0,1]];
+  const B = [[3,0],[1,2]];
+  const C = [[5,4],[1,2]];
+  const cellSz = 32;
+  const ax = 30, ay = 55;
+  const bx = 170, by = 55;
+  const cx = 330, cy = 55;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  const caption = animCaptionEl;
+
+  // Computation data for each result cell: [row, col, formula, result]
+  const computations = [
+    { r: 0, c: 0, formula: '1\u00d73+2\u00d71=5', result: 5 },
+    { r: 0, c: 1, formula: '1\u00d70+2\u00d72=4', result: 4 },
+    { r: 1, c: 0, formula: '0\u00d73+1\u00d71=1', result: 1 },
+    { r: 1, c: 1, formula: '0\u00d70+1\u00d72=2', result: 2 },
+  ];
+
+  if (phase === 0) {
+    // Phase 0: Matrix A slides in from left, Matrix B slides in from right
+    const slideA = -120 * (1 - ease);
+    const slideB = 120 * (1 - ease);
+    const alphaA = ease;
+    const alphaB = ease;
+
+    ctx.globalAlpha = alphaA;
+    drawText(ctx, '矩阵 A', ax + cellSz + slideA, ay - 12, '#00d4ff', 14);
+    drawMatrix(ctx, A, ax + slideA, ay, cellSz);
+    ctx.globalAlpha = 1;
+
+    // Multiplication sign fades in
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '\u00d7', ax + cellSz * 2 + 20, ay + cellSz + 4, '#ff6b35', 22);
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.globalAlpha = alphaB;
+    drawText(ctx, '矩阵 B', bx + cellSz + slideB, by - 12, '#00d4ff', 14);
+    drawMatrix(ctx, B, bx + slideB, by, cellSz);
+    ctx.globalAlpha = 1;
+
+    // Equals sign
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '=', bx + cellSz * 2 + 20, by + cellSz + 4, '#ff6b35', 22);
+      drawText(ctx, '结果', cx + cellSz, cy - 12, '#ffcc00', 14);
+      // Draw empty result matrix
+      drawResultMatrixEmpty(ctx, cx, cy, cellSz);
+      ctx.globalAlpha = 1;
+    }
+
+    caption.textContent = '展示矩阵 A 和 B';
+
+  } else if (phase >= 1 && phase <= 4) {
+    // Phases 1-4: Compute each result cell
+    const compIdx = phase - 1;
+    const comp = computations[compIdx];
+
+    // Always draw A, B, and result matrix
+    drawText(ctx, '矩阵 A', ax + cellSz, ay - 12, '#00d4ff', 14);
+    drawMatrix(ctx, A, ax, ay, cellSz);
+    drawText(ctx, '\u00d7', ax + cellSz * 2 + 20, ay + cellSz + 4, '#ff6b35', 22);
+    drawText(ctx, '矩阵 B', bx + cellSz, by - 12, '#00d4ff', 14);
+    drawMatrix(ctx, B, bx, by, cellSz);
+    drawText(ctx, '=', bx + cellSz * 2 + 20, by + cellSz + 4, '#ff6b35', 22);
+    drawText(ctx, '结果', cx + cellSz, cy - 12, '#ffcc00', 14);
+
+    // Draw result matrix with previously filled cells
+    const filled = [];
+    for (let i = 0; i < compIdx; i++) filled.push([computations[i].r, computations[i].c]);
+    drawResultMatrix(ctx, C, cx, cy, cellSz, filled, phase);
+
+    // Sub-phase within each computation phase:
+    // t 0.0-0.3: Highlight A's row (orange sweep from left to right)
+    // t 0.3-0.6: Highlight B's column (cyan sweep from top to bottom)
+    // t 0.6-0.85: Connecting lines with bezier curves and flowing dash
+    // t 0.85-1.0: Result drops into cell with bounce
+
+    if (t < 0.3) {
+      // Highlight A's row with sweep
+      const st = t / 0.3;
+      const se = easeInOut(st);
+      drawHighlightRowSweep(ctx, ax, ay, cellSz, comp.r, se, 'rgba(255,107,53,');
+      // Text "取A的第X行"
+      ctx.globalAlpha = se;
+      drawText(ctx, '取A的第' + (comp.r + 1) + '行', ax, ay + cellSz * 2 + 20, '#ff6b35', 14);
+      ctx.globalAlpha = 1;
+    } else if (t < 0.6) {
+      // Keep A row highlighted
+      drawHighlightRow(ctx, ax, ay, cellSz, comp.r, 'rgba(255,107,53,0.3)');
+      // Highlight B's column with sweep
+      const st = (t - 0.3) / 0.3;
+      const se = easeInOut(st);
+      drawHighlightColSweep(ctx, bx, by, cellSz, comp.c, se, 'rgba(0,212,255,');
+      ctx.globalAlpha = se;
+      drawText(ctx, '取B的第' + (comp.c + 1) + '列', bx, by + cellSz * 2 + 20, '#00d4ff', 14);
+      ctx.globalAlpha = 1;
+    } else if (t < 0.85) {
+      // Keep highlights
+      drawHighlightRow(ctx, ax, ay, cellSz, comp.r, 'rgba(255,107,53,0.3)');
+      drawHighlightCol(ctx, bx, by, cellSz, comp.c, 'rgba(0,212,255,0.3)');
+      // Connecting bezier curves with flowing dash
+      const st = (t - 0.6) / 0.25;
+      const se = easeInOut(st);
+      drawConnectingBezier(ctx, ax, ay, bx, by, cellSz, comp.r, comp.c, se);
+      // Show formula
+      ctx.globalAlpha = se;
+      drawText(ctx, comp.formula, ANIM_W / 2 - 80, ANIM_H - 22, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    } else {
+      // Keep highlights
+      drawHighlightRow(ctx, ax, ay, cellSz, comp.r, 'rgba(255,107,53,0.2)');
+      drawHighlightCol(ctx, bx, by, cellSz, comp.c, 'rgba(0,212,255,0.2)');
+      drawConnectingBezier(ctx, ax, ay, bx, by, cellSz, comp.r, comp.c, 1);
+      // Result number drops into cell with bounce
+      const st = (t - 0.85) / 0.15;
+      const bounce = easeOutBounce(st);
+      const rcx = cx + comp.c * cellSz + cellSz / 2;
+      const rcy = cy + comp.r * cellSz + cellSz / 2;
+      const startY = rcy - 40;
+      const curY = startY + (rcy - startY) * bounce;
+      const scale = 0.5 + 0.5 * bounce;
+
+      ctx.save();
+      ctx.translate(rcx, curY);
+      ctx.scale(scale, scale);
+      ctx.shadowColor = '#ffcc00';
+      ctx.shadowBlur = 10 * bounce;
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(comp.result, 0, 0);
+      ctx.restore();
+
+      // Formula text
+      ctx.globalAlpha = 1;
+      drawText(ctx, comp.formula, ANIM_W / 2 - 80, ANIM_H - 22, '#00ff88', 15);
+    }
+
+    caption.textContent = '计算 C[' + (comp.r+1) + '][' + (comp.c+1) + '] = ' + comp.formula;
+
+  } else {
+    // Phase 5: Final result with glow pulse
+    drawText(ctx, '矩阵 A', ax + cellSz, ay - 12, '#00d4ff', 14);
+    drawMatrix(ctx, A, ax, ay, cellSz);
+    drawText(ctx, '\u00d7', ax + cellSz * 2 + 20, ay + cellSz + 4, '#ff6b35', 22);
+    drawText(ctx, '矩阵 B', bx + cellSz, by - 12, '#00d4ff', 14);
+    drawMatrix(ctx, B, bx, by, cellSz);
+    drawText(ctx, '=', bx + cellSz * 2 + 20, by + cellSz + 4, '#ff6b35', 22);
+    drawText(ctx, '结果', cx + cellSz, cy - 12, '#ffcc00', 14);
+
+    // All cells filled with glow pulse
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 15 * pulse;
+    drawResultMatrixAllFilled(ctx, C, cx, cy, cellSz, pulse);
+    ctx.shadowBlur = 0;
+
+    drawText(ctx, '计算完成！', ANIM_W / 2 - 40, ANIM_H - 22, '#ffcc00', 16);
+    caption.textContent = '矩阵乘法完成！';
+  }
+}
+
+function drawHighlightRowSweep(ctx, mx, my, cs, row, progress, colorBase) {
+  const sweepWidth = cs * 2 * progress;
+  const grad = ctx.createLinearGradient(mx, my, mx + sweepWidth, my);
+  grad.addColorStop(0, colorBase + '0.0)');
+  grad.addColorStop(0.7, colorBase + '0.25)');
+  grad.addColorStop(1, colorBase + '0.5)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(mx, my + row * cs, sweepWidth, cs);
+}
+
+function drawHighlightColSweep(ctx, mx, my, cs, col, progress, colorBase) {
+  const sweepHeight = cs * 2 * progress;
+  const grad = ctx.createLinearGradient(mx, my, mx, my + sweepHeight);
+  grad.addColorStop(0, colorBase + '0.0)');
+  grad.addColorStop(0.7, colorBase + '0.25)');
+  grad.addColorStop(1, colorBase + '0.5)');
+  ctx.fillStyle = grad;
+  ctx.fillRect(mx + col * cs, my, cs, sweepHeight);
+}
+
+function drawConnectingBezier(ctx, ax, ay, bx, by, cs, row, col, progress) {
+  ctx.strokeStyle = 'rgba(255,204,0,0.6)';
+  ctx.lineWidth = 1.5;
+  const dashOffset = -Date.now() / 80;
+  ctx.setLineDash([5, 4]);
+  ctx.lineDashOffset = dashOffset;
+  for (let k = 0; k < 2; k++) {
+    const x1 = ax + k * cs + cs / 2;
+    const y1 = ay + row * cs + cs / 2;
+    const x2 = bx + col * cs + cs / 2;
+    const y2 = by + k * cs + cs / 2;
+    const cpx = (x1 + x2) / 2;
+    const cpy = (y1 + y2) / 2 - 20;
+    ctx.beginPath();
+    if (progress < 0.5) {
+      // Draw first half of bezier
+      const pt = progress * 2;
+      const steps = Math.floor(pt * 20);
+      for (let s = 0; s <= steps; s++) {
+        const st = s / 20;
+        const px = (1-st)*(1-st)*x1 + 2*(1-st)*st*cpx + st*st*x2;
+        const py = (1-st)*(1-st)*y1 + 2*(1-st)*st*cpy + st*st*y2;
+        if (s === 0) ctx.moveTo(px, py);
+        else ctx.lineTo(px, py);
+      }
+    } else {
+      ctx.moveTo(x1, y1);
+      ctx.quadraticCurveTo(cpx, cpy, x2, y2);
+    }
+    ctx.stroke();
+  }
+  ctx.setLineDash([]);
+  ctx.lineDashOffset = 0;
+}
+
+function drawResultMatrixEmpty(ctx, x, y, cs) {
+  const rows = 2, cols = 2;
+  ctx.strokeStyle = '#ffcc00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y - 4); ctx.lineTo(x - 10, y - 4);
+  ctx.lineTo(x - 10, y + rows * cs + 4); ctx.lineTo(x - 6, y + rows * cs + 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + cols * cs + 6, y - 4); ctx.lineTo(x + cols * cs + 10, y - 4);
+  ctx.lineTo(x + cols * cs + 10, y + rows * cs + 4); ctx.lineTo(x + cols * cs + 6, y + rows * cs + 4);
+  ctx.stroke();
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = x + j * cs + cs / 2;
+      const cy = y + i * cs + cs / 2;
+      ctx.fillStyle = 'rgba(255,204,0,0.2)';
+      ctx.font = '16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', cx, cy);
+    }
+  }
+}
+
+function drawResultMatrixAllFilled(ctx, matrix, x, y, cs, pulse) {
+  const rows = matrix.length, cols = matrix[0].length;
+  ctx.strokeStyle = '#ffcc00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y - 4); ctx.lineTo(x - 10, y - 4);
+  ctx.lineTo(x - 10, y + rows * cs + 4); ctx.lineTo(x - 6, y + rows * cs + 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + cols * cs + 6, y - 4); ctx.lineTo(x + cols * cs + 10, y - 4);
+  ctx.lineTo(x + cols * cs + 10, y + rows * cs + 4); ctx.lineTo(x + cols * cs + 6, y + rows * cs + 4);
+  ctx.stroke();
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = x + j * cs + cs / 2;
+      const cy = y + i * cs + cs / 2;
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(matrix[i][j], cx, cy);
+    }
+  }
+}
+
+// Keep original helper functions for other animations
+function drawHighlightRow(ctx, mx, my, cs, row, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(mx, my + row * cs, cs * 2, cs);
+}
+
+function drawHighlightCol(ctx, mx, my, cs, col, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(mx + col * cs, my, cs, cs * 2);
+}
+
+function drawResultMatrix(ctx, matrix, x, y, cs, filled, phase) {
+  const rows = matrix.length, cols = matrix[0].length;
+  ctx.strokeStyle = '#ffcc00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y - 4); ctx.lineTo(x - 10, y - 4);
+  ctx.lineTo(x - 10, y + rows * cs + 4); ctx.lineTo(x - 6, y + rows * cs + 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + cols * cs + 6, y - 4); ctx.lineTo(x + cols * cs + 10, y - 4);
+  ctx.lineTo(x + cols * cs + 10, y + rows * cs + 4); ctx.lineTo(x + cols * cs + 6, y + rows * cs + 4);
+  ctx.stroke();
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = x + j * cs + cs / 2;
+      const cy = y + i * cs + cs / 2;
+      const isFilled = filled.some(f => f[0] === i && f[1] === j);
+      if (isFilled) {
+        ctx.fillStyle = '#ffcc00';
+        ctx.font = 'bold 16px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(matrix[i][j], cx, cy);
+      } else {
+        ctx.fillStyle = 'rgba(255,204,0,0.2)';
+        ctx.font = '16px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('?', cx, cy);
+      }
+    }
+  }
+}
+
+// ===== Animation 2: Determinant =====
+function drawDeterminantAnim(phase) {
+  const ctx = animCtx;
+  const M = [[3,1],[2,4]];
+  const cs = 44;
+  const mx = ANIM_W / 2 - cs, my = 40;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  const caption = animCaptionEl;
+
+  if (phase === 0) {
+    // Phase 0: Matrix scales in from center with bounce
+    const scale = easeOutBounce(Math.min(1, t / 0.8));
+    ctx.save();
+    ctx.translate(ANIM_W / 2, my + cs);
+    ctx.scale(scale, scale);
+    ctx.translate(-ANIM_W / 2, -(my + cs));
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, M, mx, my, cs);
+    ctx.restore();
+    caption.textContent = '展示矩阵';
+
+  } else if (phase === 1) {
+    // Phase 1: Main diagonal "brush" effect from top-left to bottom-right
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Glow on diagonal elements
+    if (ease > 0.2) {
+      const glowAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 15 * glowAlpha;
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 18px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(M[0][0], mx + cs / 2, my + cs / 2);
+      ctx.fillText(M[1][1], mx + cs * 1.5, my + cs * 1.5);
+      ctx.shadowBlur = 0;
+    }
+
+    // Main diagonal line drawn progressively (brush effect)
+    const lineProgress = Math.min(1, ease * 1.3);
+    const x1 = mx + 6, y1 = my + 6;
+    const x2 = mx + cs * 2 - 6, y2 = my + cs * 2 - 6;
+    const curX = x1 + (x2 - x1) * lineProgress;
+    const curY = y1 + (y2 - y1) * lineProgress;
+
+    ctx.strokeStyle = '#00ff88';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = '#00ff88';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(curX, curY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Formula text fades in
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '主对角线: 3 \u00d7 4 = 12', ANIM_W / 2 - 80, my + cs * 2 + 30, '#00ff88', 16);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '主对角线（绿色）3 \u00d7 4 = 12';
+
+  } else if (phase === 2) {
+    // Phase 2: Anti-diagonal "brush" effect from top-right to bottom-left
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Dimmed main diagonal
+    ctx.strokeStyle = 'rgba(0,255,136,0.3)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mx + 6, my + 6);
+    ctx.lineTo(mx + cs * 2 - 6, my + cs * 2 - 6);
+    ctx.stroke();
+
+    // Glow on anti-diagonal elements
+    if (ease > 0.2) {
+      const glowAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.shadowColor = '#ff3366';
+      ctx.shadowBlur = 15 * glowAlpha;
+      ctx.fillStyle = '#ff3366';
+      ctx.font = 'bold 18px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(M[0][1], mx + cs * 1.5, my + cs / 2);
+      ctx.fillText(M[1][0], mx + cs / 2, my + cs * 1.5);
+      ctx.shadowBlur = 0;
+    }
+
+    // Anti-diagonal line drawn progressively
+    const lineProgress = Math.min(1, ease * 1.3);
+    const x1 = mx + cs * 2 - 6, y1 = my + 6;
+    const x2 = mx + 6, y2 = my + cs * 2 - 6;
+    const curX = x1 + (x2 - x1) * lineProgress;
+    const curY = y1 + (y2 - y1) * lineProgress;
+
+    ctx.strokeStyle = '#ff3366';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+    ctx.shadowColor = '#ff3366';
+    ctx.shadowBlur = 8;
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(curX, curY);
+    ctx.stroke();
+    ctx.shadowBlur = 0;
+
+    // Text
+    if (ease > 0.4) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.4) * 2.5);
+      drawText(ctx, '主对角线: 3 \u00d7 4 = 12', ANIM_W / 2 - 80, my + cs * 2 + 30, 'rgba(0,255,136,0.6)', 14);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '副对角线: 1 \u00d7 2 = 2', ANIM_W / 2 - 80, my + cs * 2 + 52, '#ff3366', 16);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '副对角线（红色）1 \u00d7 2 = 2';
+
+  } else if (phase === 3) {
+    // Phase 3: Subtraction with sequential fade-in
+    // Dimmed diagonals
+    ctx.strokeStyle = 'rgba(0,255,136,0.2)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mx + 6, my + 6); ctx.lineTo(mx + cs * 2 - 6, my + cs * 2 - 6); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,51,102,0.2)';
+    ctx.beginPath(); ctx.moveTo(mx + cs * 2 - 6, my + 6); ctx.lineTo(mx + 6, my + cs * 2 - 6); ctx.stroke();
+
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // "12" fades in
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.3);
+      drawText(ctx, '12', ANIM_W / 2 - 60, my + cs * 2 + 40, '#00ff88', 22);
+      ctx.globalAlpha = 1;
+    }
+    // " - " fades in
+    if (ease > 0.35) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.35) / 0.2);
+      drawText(ctx, ' - ', ANIM_W / 2 - 30, my + cs * 2 + 40, '#e0e6ff', 22);
+      ctx.globalAlpha = 1;
+    }
+    // "2" fades in
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.2);
+      drawText(ctx, '2', ANIM_W / 2, my + cs * 2 + 40, '#ff3366', 22);
+      ctx.globalAlpha = 1;
+    }
+    // " = 10" fades in
+    if (ease > 0.7) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.7) / 0.3);
+      drawText(ctx, ' = 10', ANIM_W / 2 + 15, my + cs * 2 + 40, '#ffcc00', 22);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '行列式 = 12 - 2 = 10';
+
+  } else {
+    // Phase 4: Result "10" with glow pulse and scale-up
+    ctx.strokeStyle = 'rgba(0,255,136,0.15)';
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(mx + 6, my + 6); ctx.lineTo(mx + cs * 2 - 6, my + cs * 2 - 6); ctx.stroke();
+    ctx.strokeStyle = 'rgba(255,51,102,0.15)';
+    ctx.beginPath(); ctx.moveTo(mx + cs * 2 - 6, my + 6); ctx.lineTo(mx + 6, my + cs * 2 - 6); ctx.stroke();
+
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Big result with scale animation and glow pulse
+    const scale = 0.5 + 0.5 * easeOutBounce(Math.min(1, t / 0.6));
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+
+    ctx.save();
+    ctx.translate(ANIM_W / 2, my + cs * 2 + 55);
+    ctx.scale(scale, scale);
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 20 * pulse;
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 28px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('|A| = 10', 0, 0);
+    ctx.restore();
+
+    caption.textContent = '行列式 |A| = 10';
+  }
+}
+
+// ===== Animation 3: Linear Dependence =====
+function drawLinearDepAnim(phase) {
+  const ctx = animCtx;
+  const caption = animCaptionEl;
+  const W = ANIM_W, H = ANIM_H;
+
+  // Use progress within phase for smooth animation
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 1500);
+  const ease = t < 0.5 ? 2*t*t : -1+(4-2*t)*t; // easeInOut
+
+  if (phase === 0) {
+    // Phase 0: Draw coordinate grid with animation
+    const ox = 180, oy = 190, scale = 50;
+
+    // Grid lines (fade in)
+    ctx.globalAlpha = ease;
+    ctx.strokeStyle = 'rgba(224,230,255,0.08)';
+    ctx.lineWidth = 1;
+    for (let i = -3; i <= 5; i++) {
+      ctx.beginPath(); ctx.moveTo(ox + i*scale, 30); ctx.lineTo(ox + i*scale, H-30); ctx.stroke();
+    }
+    for (let i = -2; i <= 4; i++) {
+      ctx.beginPath(); ctx.moveTo(30, oy - i*scale); ctx.lineTo(W-30, oy - i*scale); ctx.stroke();
+    }
+
+    // Axes
+    ctx.strokeStyle = 'rgba(224,230,255,0.4)';
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(30, oy); ctx.lineTo(W-30, oy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ox, 30); ctx.lineTo(ox, H-30); ctx.stroke();
+
+    // Arrow tips on axes
+    ctx.fillStyle = 'rgba(224,230,255,0.4)';
+    ctx.beginPath(); ctx.moveTo(W-30,oy); ctx.lineTo(W-38,oy-5); ctx.lineTo(W-38,oy+5); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(ox,30); ctx.lineTo(ox-5,38); ctx.lineTo(ox+5,38); ctx.fill();
+
+    // Labels
+    drawText(ctx, 'x', W-22, oy-10, 'rgba(224,230,255,0.6)', 14);
+    drawText(ctx, 'y', ox+10, 28, 'rgba(224,230,255,0.6)', 14);
+    drawText(ctx, 'O', ox-14, oy+14, 'rgba(224,230,255,0.3)', 12);
+
+    // Tick marks
+    for (let i = -2; i <= 4; i++) {
+      if (i === 0) continue;
+      ctx.fillStyle = 'rgba(224,230,255,0.3)';
+      ctx.font = '11px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.fillText(i, ox + i*scale, oy + 16);
+      ctx.strokeStyle = 'rgba(224,230,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ox+i*scale, oy-4); ctx.lineTo(ox+i*scale, oy+4); ctx.stroke();
+    }
+    for (let i = -1; i <= 3; i++) {
+      if (i === 0) continue;
+      ctx.fillStyle = 'rgba(224,230,255,0.3)';
+      ctx.font = '11px "JetBrains Mono"';
+      ctx.textAlign = 'right';
+      ctx.fillText(i, ox-10, oy-i*scale+4);
+      ctx.strokeStyle = 'rgba(224,230,255,0.2)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(ox-4, oy-i*scale); ctx.lineTo(ox+4, oy-i*scale); ctx.stroke();
+    }
+    ctx.globalAlpha = 1;
+    caption.textContent = '建立一个二维坐标系';
+
+  } else if (phase === 1) {
+    // Phase 1: Draw vector a = [1, 2] with animation
+    const ox = 180, oy = 190, scale = 50;
+    drawGrid(ctx, ox, oy, scale, W, H);
+
+    const ax = ox + 1*scale*ease, ay = oy - 2*scale*ease;
+
+    // Glow effect
+    ctx.shadowColor = '#00d4ff';
+    ctx.shadowBlur = 12;
+    drawFatVectorArrow(ctx, ox, oy, ax, ay, '#00d4ff', 3.5);
+    ctx.shadowBlur = 0;
+
+    // Label
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease-0.5)*2;
+      drawText(ctx, 'a = [1, 2]', ax+14, ay-6, '#00d4ff', 15);
+      // Dotted projection lines
+      ctx.strokeStyle = 'rgba(0,212,255,0.3)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([4,3]);
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ax, oy); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ax, ay); ctx.lineTo(ox, ay); ctx.stroke();
+      ctx.setLineDash([]);
+      // Projection labels
+      drawText(ctx, '1', ax-4, oy+16, 'rgba(0,212,255,0.5)', 11);
+      drawText(ctx, '2', ox-16, ay+4, 'rgba(0,212,255,0.5)', 11);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '画出向量 a = [1, 2]（蓝色箭头）';
+
+  } else if (phase === 2) {
+    // Phase 2: Draw vector b = [2, 4] and show it's 2a
+    const ox = 180, oy = 190, scale = 50;
+    drawGrid(ctx, ox, oy, scale, W, H);
+
+    // Vector a (dimmed)
+    drawFatVectorArrow(ctx, ox, oy, ox+1*scale, oy-2*scale, 'rgba(0,212,255,0.4)', 2.5);
+    drawText(ctx, 'a', ox+1*scale+10, oy-2*scale-8, 'rgba(0,212,255,0.5)', 13);
+
+    // Vector b (animated)
+    const bx = ox + 2*scale*ease, by = oy - 4*scale*ease;
+    ctx.shadowColor = '#ff6b35';
+    ctx.shadowBlur = 12;
+    drawFatVectorArrow(ctx, ox, oy, bx, by, '#ff6b35', 3.5);
+    ctx.shadowBlur = 0;
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease-0.5)*2;
+      drawText(ctx, 'b = [2, 4]', bx+14, by-6, '#ff6b35', 15);
+
+      // Show "b = 2a" with scaling animation
+      const textScale = 0.5 + ease*0.5;
+      ctx.save();
+      ctx.translate(W/2, 28);
+      ctx.scale(textScale, textScale);
+      drawText(ctx, 'b = 2 × a', -40, 0, '#ffcc00', 20);
+      ctx.restore();
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '画出向量 b = [2, 4]，发现 b = 2a！';
+
+  } else if (phase === 3) {
+    // Phase 3: Show they are on the same line - linear dependent
+    const ox = 180, oy = 190, scale = 50;
+    drawGrid(ctx, ox, oy, scale, W, H);
+
+    // Extended line (dashed)
+    ctx.strokeStyle = 'rgba(255,107,53,0.25)';
+    ctx.lineWidth = 2;
+    ctx.setLineDash([8, 5]);
+    ctx.beginPath();
+    ctx.moveTo(ox - 0.5*scale, oy + 1*scale);
+    ctx.lineTo(ox + 3*scale, oy - 6*scale);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    // Vector a
+    drawFatVectorArrow(ctx, ox, oy, ox+1*scale, oy-2*scale, '#00d4ff', 3);
+    drawText(ctx, 'a', ox+1*scale+10, oy-2*scale-8, '#00d4ff', 13);
+
+    // Vector b with pulse
+    const pulse = 1 + 0.05*Math.sin(Date.now()/200);
+    ctx.shadowColor = '#ff6b35';
+    ctx.shadowBlur = 15;
+    drawFatVectorArrow(ctx, ox, oy, ox+2*scale, oy-4*scale, '#ff6b35', 3.5*pulse);
+    ctx.shadowBlur = 0;
+    drawText(ctx, 'b = 2a', ox+2*scale+14, oy-4*scale-6, '#ff6b35', 14);
+
+    // "2a" annotation along the vector
+    if (ease > 0.3) {
+      ctx.globalAlpha = Math.min(1, (ease-0.3)*2);
+      // Draw small a vector at midpoint, then another
+      const mx = ox + 1*scale, my = oy - 2*scale;
+      ctx.strokeStyle = 'rgba(0,212,255,0.6)';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([3,3]);
+      drawFatVectorArrow(ctx, ox, oy, mx, my, 'rgba(0,212,255,0.5)', 2);
+      drawFatVectorArrow(ctx, mx, my, ox+2*scale, oy-4*scale, 'rgba(0,212,255,0.5)', 2);
+      ctx.setLineDash([]);
+      drawText(ctx, 'a', mx-20, my-10, 'rgba(0,212,255,0.7)', 12);
+      drawText(ctx, '+a', mx+16, my-20, 'rgba(0,212,255,0.7)', 12);
+      ctx.globalAlpha = 1;
+    }
+
+    // Result text
+    drawText(ctx, '两向量在同一直线上 → 线性相关！', 40, H-20, '#ff3366', 15);
+    caption.textContent = 'b 可以由 a "拼" 出来（b = 2a），所以线性相关！';
+
+  } else if (phase === 4) {
+    // Phase 4: Contrast - independent vectors
+    const ox = 180, oy = 190, scale = 50;
+    drawGrid(ctx, ox, oy, scale, W, H);
+
+    // Vector a = [1, 0] along x-axis
+    ctx.shadowColor = '#00d4ff';
+    ctx.shadowBlur = 10;
+    drawFatVectorArrow(ctx, ox, oy, ox+2*scale*ease, oy, '#00d4ff', 3.5);
+    ctx.shadowBlur = 0;
+
+    if (ease > 0.4) {
+      const ease2 = Math.min(1, (ease-0.4)/0.6);
+      // Vector b = [0, 1] along y-axis
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 10;
+      drawFatVectorArrow(ctx, ox, oy, ox, oy-2*scale*ease2, '#00ff88', 3.5);
+      ctx.shadowBlur = 0;
+
+      if (ease2 > 0.5) {
+        ctx.globalAlpha = (ease2-0.5)*2;
+        drawText(ctx, 'a = [1, 0]', ox+2*scale+10, oy+4, '#00d4ff', 14);
+        drawText(ctx, 'b = [0, 1]', ox+10, oy-2*scale-8, '#00ff88', 14);
+
+        // Angle arc between vectors
+        ctx.strokeStyle = 'rgba(255,204,0,0.5)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(ox, oy, 25, -Math.PI/2, 0);
+        ctx.stroke();
+        drawText(ctx, '90°', ox+28, oy-12, '#ffcc00', 12);
+        ctx.globalAlpha = 1;
+      }
+    }
+
+    if (ease > 0.8) {
+      ctx.globalAlpha = (ease-0.8)*5;
+      drawText(ctx, '两向量不在同一直线上 → 线性无关！', 30, H-20, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '对比：a=[1,0] 和 b=[0,1] 互相无法替代，线性无关！';
+  }
+}
+
+function drawGrid(ctx, ox, oy, scale, W, H) {
+  // Grid
+  ctx.strokeStyle = 'rgba(224,230,255,0.06)';
+  ctx.lineWidth = 1;
+  for (let i = -3; i <= 5; i++) {
+    ctx.beginPath(); ctx.moveTo(ox+i*scale, 30); ctx.lineTo(ox+i*scale, H-30); ctx.stroke();
+  }
+  for (let i = -2; i <= 4; i++) {
+    ctx.beginPath(); ctx.moveTo(30, oy-i*scale); ctx.lineTo(W-30, oy-i*scale); ctx.stroke();
+  }
+  // Axes
+  ctx.strokeStyle = 'rgba(224,230,255,0.3)';
+  ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(30, oy); ctx.lineTo(W-30, oy); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(ox, 30); ctx.lineTo(ox, H-30); ctx.stroke();
+  // Arrow tips
+  ctx.fillStyle = 'rgba(224,230,255,0.3)';
+  ctx.beginPath(); ctx.moveTo(W-30,oy); ctx.lineTo(W-36,oy-4); ctx.lineTo(W-36,oy+4); ctx.fill();
+  ctx.beginPath(); ctx.moveTo(ox,30); ctx.lineTo(ox-4,36); ctx.lineTo(ox+4,36); ctx.fill();
+  // Labels
+  drawText(ctx, 'x', W-22, oy-8, 'rgba(224,230,255,0.4)', 12);
+  drawText(ctx, 'y', ox+8, 28, 'rgba(224,230,255,0.4)', 12);
+  drawText(ctx, 'O', ox-12, oy+14, 'rgba(224,230,255,0.2)', 11);
+  // Ticks
+  for (let i = -2; i <= 4; i++) {
+    if (i===0) continue;
+    ctx.fillStyle = 'rgba(224,230,255,0.25)';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.fillText(i, ox+i*scale, oy+14);
+  }
+  for (let i = -1; i <= 3; i++) {
+    if (i===0) continue;
+    ctx.fillStyle = 'rgba(224,230,255,0.25)';
+    ctx.font = '10px "JetBrains Mono"';
+    ctx.textAlign = 'right';
+    ctx.fillText(i, ox-8, oy-i*scale+4);
+  }
+}
+
+function drawFatVectorArrow(ctx, x1, y1, x2, y2, color, width) {
+  const angle = Math.atan2(y2-y1, x2-x1);
+  const headLen = 14;
+
+  // Shaft with gradient
+  ctx.strokeStyle = color;
+  ctx.lineWidth = width || 3;
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2 - headLen*0.6*Math.cos(angle), y2 - headLen*0.6*Math.sin(angle));
+  ctx.stroke();
+
+  // Arrowhead (filled triangle)
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen*Math.cos(angle-0.35), y2 - headLen*Math.sin(angle-0.35));
+  ctx.lineTo(x2 - headLen*0.6*Math.cos(angle), y2 - headLen*0.6*Math.sin(angle));
+  ctx.lineTo(x2 - headLen*Math.cos(angle+0.35), y2 - headLen*Math.sin(angle+0.35));
+  ctx.closePath();
+  ctx.fill();
+
+  // Origin dot
+  ctx.fillStyle = color;
+  ctx.beginPath();
+  ctx.arc(x1, y1, 4, 0, Math.PI*2);
+  ctx.fill();
+}
+
+// ===== Animation 4: Matrix Inverse =====
+function drawInverseAnim(phase) {
+  const ctx = animCtx;
+  const A = [[3,1],[2,4]];
+  const cs = 40;
+  const mx = 50, my = 50;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  const caption = animCaptionEl;
+
+  if (phase === 0) {
+    // Phase 0: Matrix A displayed with title
+    ctx.globalAlpha = ease;
+    drawText(ctx, 'A\u207b\u00b9 是什么？', ANIM_W / 2 - 50, 20, '#ffcc00', 16);
+    drawText(ctx, '矩阵 A', mx + cs, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, A, mx, my, cs);
+    ctx.globalAlpha = 1;
+    caption.textContent = 'A 的逆矩阵是什么？';
+
+  } else if (phase === 1) {
+    // Phase 1: Calculate determinant with diagonal highlights
+    drawText(ctx, '矩阵 A', mx + cs, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, A, mx, my, cs);
+
+    // Main diagonal green highlight
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(0,255,136,0.2)';
+      ctx.fillRect(mx, my, cs, cs);
+      ctx.fillRect(mx + cs, my + cs, cs, cs);
+      // Glow on elements
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(A[0][0], mx + cs / 2, my + cs / 2);
+      ctx.fillText(A[1][1], mx + cs * 1.5, my + cs * 1.5);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Anti-diagonal red highlight
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,51,102,0.2)';
+      ctx.fillRect(mx + cs, my, cs, cs);
+      ctx.fillRect(mx, my + cs, cs, cs);
+      ctx.shadowColor = '#ff3366';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ff3366';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(A[0][1], mx + cs * 1.5, my + cs / 2);
+      ctx.fillText(A[1][0], mx + cs / 2, my + cs * 1.5);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // det formula fades in
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, 'det = 3\u00d74 - 1\u00d72 = 12 - 2 = 10', mx, my + cs * 2 + 25, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '计算行列式 det(A) = 10';
+
+  } else if (phase === 2) {
+    // Phase 2: Swap diagonal with curved arrow animation
+    drawText(ctx, '矩阵 A', mx + cs, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, A, mx, my, cs);
+
+    // Show swapped matrix on the right
+    const sx = 250, sy = my;
+    drawText(ctx, '交换后:', sx + cs, sy - 16, '#ff6b35', 13);
+
+    if (ease > 0.3) {
+      const alpha = Math.min(1, (ease - 0.3) / 0.4);
+      ctx.globalAlpha = alpha;
+      const swapped = [[4,-1],[-2,3]];
+      drawMatrix(ctx, swapped, sx, sy, cs);
+      ctx.globalAlpha = 1;
+    }
+
+    // Curved arrow animation for diagonal swap (3 and 4)
+    if (ease > 0.1) {
+      const arrowProgress = Math.min(1, (ease - 0.1) / 0.5);
+      // Arrow from A[0][0]=3 to swapped[1][1]=3
+      drawAnimatedCurvedArrow(ctx, mx + cs / 2, my + cs / 2, sx + cs * 1.5, sy + cs * 1.5, '#00ff88', arrowProgress);
+      // Arrow from A[1][1]=4 to swapped[0][0]=4
+      drawAnimatedCurvedArrow(ctx, mx + cs * 1.5, my + cs * 1.5, sx + cs / 2, sy + cs / 2, '#00ff88', arrowProgress);
+    }
+
+    // Negate anti-diagonal elements (flash red)
+    if (ease > 0.5) {
+      const flashAlpha = 0.5 + 0.5 * Math.sin(Date.now() / 150);
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) * 3) * flashAlpha;
+      ctx.fillStyle = 'rgba(255,51,102,0.15)';
+      ctx.fillRect(sx + cs, sy, cs, cs);
+      ctx.fillRect(sx, sy + cs, cs, cs);
+      ctx.globalAlpha = 1;
+    }
+
+    // Step text
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '交换对角线，副对角线取负', mx, my + cs * 2 + 25, '#ffcc00', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '交换对角线元素，副对角线变号';
+
+  } else if (phase === 3) {
+    // Phase 3: Divide by det
+    const swapped = [[4,-1],[-2,3]];
+    const result = [[0.4, -0.1], [-0.2, 0.3]];
+
+    drawText(ctx, '交换后', mx + cs, my - 16, '#ff6b35', 13);
+    drawMatrix(ctx, swapped, mx, my, cs);
+
+    const rx = 250, ry = my;
+
+    // Division animation: each element transforms
+    if (ease > 0.3) {
+      const divProgress = Math.min(1, (ease - 0.3) / 0.5);
+      ctx.globalAlpha = divProgress;
+
+      // Show "÷10" above each cell
+      for (let i = 0; i < 2; i++) {
+        for (let j = 0; j < 2; j++) {
+          const cx = rx + j * cs + cs / 2;
+          const cy = ry + i * cs + cs / 2;
+          // "÷10" label above
+          ctx.fillStyle = '#ff6b35';
+          ctx.font = '11px "JetBrains Mono"';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'bottom';
+          ctx.fillText('\u00f710', cx, ry + i * cs - 2);
+
+          // Number morphs from original to result
+          const origVal = swapped[i][j];
+          const resVal = result[i][j];
+          const displayVal = origVal + (resVal - origVal) * divProgress;
+          ctx.fillStyle = '#ffcc00';
+          ctx.font = 'bold 16px "JetBrains Mono"';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(Number(displayVal.toFixed(1)), cx, cy);
+        }
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Draw result matrix brackets
+    if (ease > 0.2) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.strokeStyle = '#ffcc00';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(rx - 6, ry - 4); ctx.lineTo(rx - 10, ry - 4);
+      ctx.lineTo(rx - 10, ry + cs * 2 + 4); ctx.lineTo(rx - 6, ry + cs * 2 + 4);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(rx + cs * 2 + 6, ry - 4); ctx.lineTo(rx + cs * 2 + 10, ry - 4);
+      ctx.lineTo(rx + cs * 2 + 10, ry + cs * 2 + 4); ctx.lineTo(rx + cs * 2 + 6, ry + cs * 2 + 4);
+      ctx.stroke();
+      drawText(ctx, 'A\u207b\u00b9', rx + cs, ry - 16, '#ffcc00', 14);
+      ctx.globalAlpha = 1;
+    }
+
+    // Equals sign between
+    if (ease > 0.15) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.15) / 0.2);
+      drawText(ctx, '=', mx + cs * 2 + 15, my + cs + 4, '#ff6b35', 18);
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '每个元素 \u00f7 det(10)', mx, my + cs * 2 + 25, '#ffcc00', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '每个元素除以行列式 10';
+
+  } else {
+    // Phase 4: Final result with glow
+    const result = [[0.4, -0.1], [-0.2, 0.3]];
+    const fx = ANIM_W / 2 - cs, fy = my + 10;
+
+    // Title morphs
+    if (ease > 0.1) {
+      ctx.globalAlpha = ease;
+      drawText(ctx, '逆矩阵 A\u207b\u00b9', ANIM_W / 2 - 40, fy - 20, '#ffcc00', 16);
+      ctx.globalAlpha = 1;
+    }
+
+    // Result matrix with glow
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    const scale = 0.8 + 0.2 * easeOutBounce(Math.min(1, t / 0.5));
+
+    ctx.save();
+    ctx.translate(ANIM_W / 2, fy + cs);
+    ctx.scale(scale, scale);
+    ctx.translate(-ANIM_W / 2, -(fy + cs));
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 15 * pulse;
+    drawMatrix(ctx, result, fx, fy, cs + 4);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '验证: A \u00d7 A\u207b\u00b9 = I（单位矩阵）', ANIM_W / 2 - 100, fy + cs * 2 + 30, '#00ff88', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '逆矩阵计算完成！';
+  }
+}
+
+function drawAnimatedCurvedArrow(ctx, x1, y1, x2, y2, color, progress) {
+  const cpx = (x1 + x2) / 2;
+  const cpy = (y1 + y2) / 2 - 35;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.setLineDash([4, 3]);
+  const dashOffset = -Date.now() / 80;
+  ctx.lineDashOffset = dashOffset;
+
+  // Draw partial path based on progress
+  const steps = Math.floor(progress * 20);
+  ctx.beginPath();
+  for (let s = 0; s <= steps; s++) {
+    const st = s / 20;
+    const px = (1-st)*(1-st)*x1 + 2*(1-st)*st*cpx + st*st*x2;
+    const py = (1-st)*(1-st)*y1 + 2*(1-st)*st*cpy + st*st*y2;
+    if (s === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.stroke();
+
+  // Arrowhead at current position
+  if (progress > 0.05) {
+    const st = steps / 20;
+    const px = (1-st)*(1-st)*x1 + 2*(1-st)*st*cpx + st*st*x2;
+    const py = (1-st)*(1-st)*y1 + 2*(1-st)*st*cpy + st*st*y2;
+    // Tangent direction
+    const dt = 0.01;
+    const st2 = Math.min(1, st + dt);
+    const px2 = (1-st2)*(1-st2)*x1 + 2*(1-st2)*st2*cpx + st2*st2*x2;
+    const py2 = (1-st2)*(1-st2)*y1 + 2*(1-st2)*st2*cpy + st2*st2*y2;
+    const angle = Math.atan2(py2 - py, px2 - px);
+    const headLen = 8;
+    ctx.setLineDash([]);
+    ctx.fillStyle = color;
+    ctx.beginPath();
+    ctx.moveTo(px, py);
+    ctx.lineTo(px - headLen * Math.cos(angle - 0.4), py - headLen * Math.sin(angle - 0.4));
+    ctx.lineTo(px - headLen * Math.cos(angle + 0.4), py - headLen * Math.sin(angle + 0.4));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  ctx.setLineDash([]);
+  ctx.lineDashOffset = 0;
+}
+
+// ===== Animation 5: Eigenvalue =====
+function drawEigenvalueAnim(phase) {
+  const ctx = animCtx;
+  const A = [[2,1],[1,2]];
+  const cs = 40;
+  const mx = ANIM_W / 2 - cs, my = 30;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+  drawMatrix(ctx, A, mx, my, cs);
+
+  const caption = animCaptionEl;
+  const baseY = my + cs * 2 + 20;
+
+  if (phase === 0) {
+    // Phase 0: Show matrix A with fade-in
+    ctx.globalAlpha = ease;
+    drawText(ctx, '矩阵 A', ANIM_W / 2, my - 16, '#00d4ff', 14);
+    drawMatrix(ctx, A, mx, my, cs);
+    ctx.globalAlpha = 1;
+    caption.textContent = '展示矩阵 A';
+
+  } else if (phase === 1) {
+    // Phase 1: Highlight diagonal, show trace calculation with step-by-step fade-in
+    // Highlight diagonal elements with glow
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(0,212,255,0.2)';
+      ctx.fillRect(mx, my, cs, cs);
+      ctx.fillRect(mx + cs, my + cs, cs, cs);
+      ctx.shadowColor = '#00d4ff';
+      ctx.shadowBlur = 12;
+      ctx.fillStyle = '#00d4ff';
+      ctx.font = 'bold 18px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(A[0][0], mx + cs / 2, my + cs / 2);
+      ctx.fillText(A[1][1], mx + cs * 1.5, my + cs * 1.5);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // "tr(A) = " fades in
+    if (ease > 0.3) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.3) / 0.2);
+      drawText(ctx, 'tr(A) = ', 40, baseY + 10, '#00d4ff', 15);
+      ctx.globalAlpha = 1;
+    }
+    // "2" fades in
+    if (ease > 0.45) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.45) / 0.15);
+      drawText(ctx, '2', 110, baseY + 10, '#00d4ff', 15);
+      ctx.globalAlpha = 1;
+    }
+    // " + " fades in
+    if (ease > 0.55) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.55) / 0.1);
+      drawText(ctx, ' + ', 125, baseY + 10, '#e0e6ff', 15);
+      ctx.globalAlpha = 1;
+    }
+    // "2" fades in
+    if (ease > 0.65) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.65) / 0.15);
+      drawText(ctx, '2', 155, baseY + 10, '#00d4ff', 15);
+      ctx.globalAlpha = 1;
+    }
+    // " = 4" fades in
+    if (ease > 0.75) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.75) / 0.25);
+      drawText(ctx, ' = 4', 175, baseY + 10, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '计算迹 tr(A) = 2 + 2 = 4';
+
+  } else if (phase === 2) {
+    // Phase 2: Show determinant calculation with step-by-step
+    // "det(A) = " fades in
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.2);
+      drawText(ctx, 'det(A) = ', 40, baseY + 10, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    // "2×2" fades in
+    if (ease > 0.25) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.25) / 0.15);
+      drawText(ctx, '2\u00d72', 125, baseY + 10, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    // " - " fades in
+    if (ease > 0.4) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.4) / 0.1);
+      drawText(ctx, ' - ', 160, baseY + 10, '#e0e6ff', 15);
+      ctx.globalAlpha = 1;
+    }
+    // "1×1" fades in
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.15);
+      drawText(ctx, '1\u00d71', 190, baseY + 10, '#ff3366', 15);
+      ctx.globalAlpha = 1;
+    }
+    // " = 3" fades in
+    if (ease > 0.65) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.65) / 0.2);
+      drawText(ctx, ' = 3', 225, baseY + 10, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+
+    // Show trace result from previous phase (dimmed)
+    ctx.globalAlpha = 0.4;
+    drawText(ctx, 'tr(A) = 4', 40, baseY - 12, '#00d4ff', 13);
+    ctx.globalAlpha = 1;
+    caption.textContent = '计算行列式 det(A) = 2\u00d72 - 1\u00d71 = 3';
+
+  } else if (phase === 3) {
+    // Phase 3: Characteristic equation appears character by character
+    // Show previous results dimmed
+    ctx.globalAlpha = 0.3;
+    drawText(ctx, 'tr(A) = 4', 40, baseY - 15, '#00d4ff', 12);
+    drawText(ctx, 'det(A) = 3', 40, baseY, '#00ff88', 12);
+    ctx.globalAlpha = 1;
+
+    // "特征方程：" label
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.2);
+      drawText(ctx, '特征方程：', 40, baseY + 25, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+
+    // Characters of "λ² - 4λ + 3 = 0" appear one by one
+    const chars = [
+      { text: '\u03bb\u00b2', start: 0.25 },
+      { text: ' - ', start: 0.35 },
+      { text: '4\u03bb', start: 0.45 },
+      { text: ' + ', start: 0.55 },
+      { text: '3', start: 0.65 },
+      { text: ' = 0', start: 0.75 },
+    ];
+
+    let xOffset = 40;
+    for (const ch of chars) {
+      if (ease > ch.start) {
+        const charAlpha = Math.min(1, (ease - ch.start) / 0.08);
+        ctx.globalAlpha = charAlpha;
+        drawText(ctx, ch.text, xOffset, baseY + 50, '#ffcc00', 20);
+        // Approximate character width for positioning
+        xOffset += ch.text.length * 12 + 2;
+      }
+    }
+    ctx.globalAlpha = 1;
+    caption.textContent = '特征方程 \u03bb\u00b2 - 4\u03bb + 3 = 0';
+
+  } else {
+    // Phase 4: Solve with quadratic formula, show eigenvalues
+    // Show equation dimmed
+    ctx.globalAlpha = 0.4;
+    drawText(ctx, '\u03bb\u00b2 - 4\u03bb + 3 = 0', 40, baseY - 5, '#ffcc00', 14);
+    ctx.globalAlpha = 1;
+
+    // Quadratic formula steps
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.2);
+      drawText(ctx, '求根公式：', 40, baseY + 18, '#ff6b35', 14);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.25) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.25) / 0.2);
+      drawText(ctx, '\u03bb = (4 \u00b1 \u221a(16-12)) / 2', 40, baseY + 40, '#ff6b35', 16);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.45) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.45) / 0.15);
+      drawText(ctx, '  = (4 \u00b1 2) / 2', 40, baseY + 62, '#ff6b35', 16);
+      ctx.globalAlpha = 1;
+    }
+
+    // Eigenvalues with scale-up and glow
+    if (ease > 0.65) {
+      const eigenEase = Math.min(1, (ease - 0.65) / 0.35);
+      const scale1 = 0.5 + 0.5 * easeOutBounce(eigenEase);
+      const scale2 = 0.5 + 0.5 * easeOutBounce(Math.min(1, (eigenEase - 0.2) / 0.8));
+      const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+
+      // λ₁ = 3
+      ctx.save();
+      ctx.translate(130, baseY + 95);
+      ctx.scale(scale1, scale1);
+      ctx.shadowColor = '#00ff88';
+      ctx.shadowBlur = 12 * pulse;
+      ctx.fillStyle = '#00ff88';
+      ctx.font = 'bold 22px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u03bb\u2081 = 3', 0, 0);
+      ctx.restore();
+
+      // λ₂ = 1
+      if (eigenEase > 0.3) {
+        ctx.save();
+        ctx.translate(320, baseY + 95);
+        ctx.scale(scale2, scale2);
+        ctx.shadowColor = '#00d4ff';
+        ctx.shadowBlur = 12 * pulse;
+        ctx.fillStyle = '#00d4ff';
+        ctx.font = 'bold 22px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText('\u03bb\u2082 = 1', 0, 0);
+        ctx.restore();
+      }
+    }
+    caption.textContent = '特征值 \u03bb\u2081 = 3, \u03bb\u2082 = 1';
+  }
+}
+
+// ===== Animation 6: Matrix Transpose =====
+function drawTransposeAnim(phase) {
+  const ctx = animCtx;
+  const A = [[1,2,3],[4,5,6]];
+  const AT = [[1,4],[2,5],[3,6]];
+  const cs = 36;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  const caption = animCaptionEl;
+
+  // Positions
+  const ax = 30, ay = 50;   // Original matrix A (2x3)
+  const tx = 310, ty = 50;  // Transposed matrix AT (3x2)
+
+  if (phase === 0) {
+    // Phase 0: Show original matrix A with fade-in
+    ctx.globalAlpha = ease;
+    drawText(ctx, '矩阵 A（2\u00d73）', ax + cs * 1.5 - 30, ay - 16, '#a78bfa', 14);
+    drawMatrix(ctx, A, ax, ay, cs);
+    ctx.globalAlpha = 1;
+    caption.textContent = '展示原始矩阵 A（2行3列）';
+
+  } else if (phase === 1) {
+    // Phase 1: Highlight row 1, animate it moving to column 1 of AT
+    drawText(ctx, '矩阵 A（2\u00d73）', ax + cs * 1.5 - 30, ay - 16, '#a78bfa', 14);
+    drawMatrix(ctx, A, ax, ay, cs);
+
+    // Highlight row 0 of A
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(167,139,250,0.3)';
+      ctx.fillRect(ax, ay, cs * 3, cs);
+      // Glow on row elements
+      ctx.shadowColor = '#a78bfa';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#a78bfa';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(A[0][0], ax + cs / 2, ay + cs / 2);
+      ctx.fillText(A[0][1], ax + cs * 1.5, ay + cs / 2);
+      ctx.fillText(A[0][2], ax + cs * 2.5, ay + cs / 2);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Show AT skeleton on the right
+    if (ease > 0.2) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      drawText(ctx, 'A\u1d40（3\u00d72）', tx + cs - 15, ty - 16, '#ffcc00', 14);
+      // Draw empty AT brackets
+      drawEmptyMatrixBrackets(ctx, tx, ty, 3, 2, cs, '#ffcc00');
+      ctx.globalAlpha = 1;
+    }
+
+    // Animate row 0 elements moving to column 0 of AT
+    if (ease > 0.4) {
+      const moveProgress = Math.min(1, (ease - 0.4) / 0.5);
+      const me = easeInOut(moveProgress);
+      ctx.globalAlpha = me;
+
+      for (let j = 0; j < 3; j++) {
+        const fromX = ax + j * cs + cs / 2;
+        const fromY = ay + cs / 2;
+        const toX = tx + cs / 2;
+        const toY = ty + j * cs + cs / 2;
+        const curX = fromX + (toX - fromX) * me;
+        const curY = fromY + (toY - fromY) * me;
+
+        ctx.shadowColor = '#a78bfa';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#a78bfa';
+        ctx.font = 'bold 16px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(A[0][j], curX, curY);
+        ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '第1行 [1,2,3] \u2192 第1列', ANIM_W / 2 - 70, ANIM_H - 20, '#a78bfa', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '高亮第1行 [1,2,3]，转置后变成第1列';
+
+  } else if (phase === 2) {
+    // Phase 2: Highlight row 2, animate it moving to column 2 of AT
+    drawText(ctx, '矩阵 A（2\u00d73）', ax + cs * 1.5 - 30, ay - 16, '#a78bfa', 14);
+    drawMatrix(ctx, A, ax, ay, cs);
+
+    // Show AT with column 0 filled (dimmed)
+    drawText(ctx, 'A\u1d40（3\u00d72）', tx + cs - 15, ty - 16, '#ffcc00', 14);
+    // Draw filled column 0
+    for (let j = 0; j < 3; j++) {
+      const cx = tx + cs / 2;
+      const cy = ty + j * cs + cs / 2;
+      ctx.fillStyle = 'rgba(167,139,250,0.5)';
+      ctx.font = '16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(AT[j][0], cx, cy);
+    }
+    drawEmptyMatrixBrackets(ctx, tx, ty, 3, 2, cs, '#ffcc00');
+
+    // Highlight row 1 of A
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,107,53,0.3)';
+      ctx.fillRect(ax, ay + cs, cs * 3, cs);
+      ctx.shadowColor = '#ff6b35';
+      ctx.shadowBlur = 10;
+      ctx.fillStyle = '#ff6b35';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(A[1][0], ax + cs / 2, ay + cs * 1.5);
+      ctx.fillText(A[1][1], ax + cs * 1.5, ay + cs * 1.5);
+      ctx.fillText(A[1][2], ax + cs * 2.5, ay + cs * 1.5);
+      ctx.shadowBlur = 0;
+      ctx.globalAlpha = 1;
+    }
+
+    // Animate row 1 elements moving to column 1 of AT
+    if (ease > 0.4) {
+      const moveProgress = Math.min(1, (ease - 0.4) / 0.5);
+      const me = easeInOut(moveProgress);
+      ctx.globalAlpha = me;
+
+      for (let j = 0; j < 3; j++) {
+        const fromX = ax + j * cs + cs / 2;
+        const fromY = ay + cs * 1.5;
+        const toX = tx + cs * 1.5;
+        const toY = ty + j * cs + cs / 2;
+        const curX = fromX + (toX - fromX) * me;
+        const curY = fromY + (toY - fromY) * me;
+
+        ctx.shadowColor = '#ff6b35';
+        ctx.shadowBlur = 8;
+        ctx.fillStyle = '#ff6b35';
+        ctx.font = 'bold 16px "JetBrains Mono"';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(A[1][j], curX, curY);
+        ctx.shadowBlur = 0;
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '第2行 [4,5,6] \u2192 第2列', ANIM_W / 2 - 70, ANIM_H - 20, '#ff6b35', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '高亮第2行 [4,5,6]，转置后变成第2列';
+
+  } else if (phase === 3) {
+    // Phase 3: Show complete transposed matrix with glow
+    drawText(ctx, '矩阵 A（2\u00d73）', ax + cs * 1.5 - 30, ay - 16, '#a78bfa', 14);
+    drawMatrix(ctx, A, ax, ay, cs);
+
+    // Arrow between
+    drawText(ctx, '\u2192', ax + cs * 3 + 15, ay + cs + 4, '#ff6b35', 22);
+    drawText(ctx, 'A\u1d40', ax + cs * 3 + 40, ay + cs + 4, '#ffcc00', 18);
+
+    // Complete AT with glow pulse
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    const scale = 0.8 + 0.2 * easeOutBounce(Math.min(1, t / 0.5));
+
+    ctx.save();
+    ctx.translate(tx + cs, ty + cs);
+    ctx.scale(scale, scale);
+    ctx.translate(-(tx + cs), -(ty + cs));
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 15 * pulse;
+    drawMatrix(ctx, AT, tx, ty, cs);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    drawText(ctx, 'A\u1d40（3\u00d72）', tx + cs - 15, ty - 16, '#ffcc00', 14);
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, '行变列，列变行，完成！', ANIM_W / 2 - 70, ANIM_H - 20, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '转置完成！A（2\u00d73）\u2192 A\u1d40（3\u00d72）';
+
+  } else {
+    // Phase 4: Show symmetric matrix special case
+    const S = [[1,2,3],[2,5,6],[3,6,9]]; // Symmetric 3x3
+    const scs = 32;
+    const sx = ANIM_W / 2 - scs * 1.5, sy = 30;
+
+    drawText(ctx, '对称矩阵：A\u1d40 = A', ANIM_W / 2 - 60, sy - 16, '#00ff88', 15);
+    drawMatrix(ctx, S, sx, sy, scs);
+
+    // Highlight main diagonal
+    if (ease > 0.2) {
+      const alpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(sx + 4, sy + 4);
+      ctx.lineTo(sx + scs * 3 - 4, sy + scs * 3 - 4);
+      ctx.stroke();
+
+      // Highlight symmetric pairs with same color
+      const pairs = [[0,1],[0,2],[1,2]];
+      const colors = ['rgba(0,212,255,0.25)', 'rgba(255,107,53,0.25)', 'rgba(255,204,0,0.25)'];
+      pairs.forEach(([r,c], idx) => {
+        ctx.fillStyle = colors[idx];
+        ctx.fillRect(sx + c * scs, sy + r * scs, scs, scs);
+        ctx.fillRect(sx + r * scs, sy + c * scs, scs, scs);
+      });
+      ctx.globalAlpha = 1;
+    }
+
+    // Show aij = aji text
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, 'a\u1d62\u2c7c = a\u2c7c\u1d62  （关于主对角线对称）', ANIM_W / 2 - 90, sy + scs * 3 + 20, '#00ff88', 14);
+      ctx.globalAlpha = 1;
+    }
+
+    // Show (Aᵀ)ᵀ = A property
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '(A\u1d40)\u1d40 = A    转两次等于没转！', ANIM_W / 2 - 90, sy + scs * 3 + 45, '#ffcc00', 14);
+      ctx.globalAlpha = 1;
+    }
+
+    caption.textContent = '对称矩阵的特殊性质';
+  }
+}
+
+// ===== Animation 7: Matrix Symmetry =====
+function drawSymmetryAnim(phase) {
+  const ctx = animCtx;
+  const caption = animCaptionEl;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+
+  const symM = [[1,2,3],[2,5,6],[3,6,9]];
+  const skewM = [[0,2,-3],[-2,0,4],[3,-4,0]];
+  const asymM = [[1,3,2],[5,2,1],[4,6,3]];
+  const cs = 32;
+
+  if (phase === 0) {
+    // Phase 0: Show symmetric matrix with main diagonal highlight
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    ctx.globalAlpha = ease;
+    drawText(ctx, '对称矩阵', ANIM_W / 2 - 30, my - 16, '#f472b6', 15);
+    drawMatrix(ctx, symM, mx, my, cs);
+    ctx.globalAlpha = 1;
+
+    // Highlight main diagonal
+    if (ease > 0.3) {
+      const alpha = Math.min(1, (ease - 0.3) / 0.4);
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#00ff88';
+      ctx.lineWidth = 2.5;
+      ctx.beginPath();
+      ctx.moveTo(mx + 4, my + 4);
+      ctx.lineTo(mx + cs * 3 - 4, my + cs * 3 - 4);
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+
+    // Show aij = aji pairs
+    if (ease > 0.5) {
+      const alpha = Math.min(1, (ease - 0.5) / 0.5);
+      ctx.globalAlpha = alpha;
+      const pairs = [[0,1],[0,2],[1,2]];
+      const colors = ['rgba(0,212,255,0.3)', 'rgba(255,107,53,0.3)', 'rgba(255,204,0,0.3)'];
+      pairs.forEach(([r,c], idx) => {
+        ctx.fillStyle = colors[idx];
+        ctx.fillRect(mx + c * cs, my + r * cs, cs, cs);
+        ctx.fillRect(mx + r * cs, my + c * cs, cs, cs);
+      });
+      drawText(ctx, 'a\u1d62\u2c7c = a\u2c7c\u1d62  关于主对角线对称', ANIM_W / 2 - 100, my + cs * 3 + 18, '#00ff88', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '对称矩阵：aᵢⱼ = aⱼᵢ，关于主对角线对称';
+
+  } else if (phase === 1) {
+    // Phase 1: Folding animation - show symmetric pairs connecting
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    drawText(ctx, '对称矩阵', ANIM_W / 2 - 30, my - 16, '#f472b6', 15);
+    drawMatrix(ctx, symM, mx, my, cs);
+
+    // Main diagonal line
+    ctx.strokeStyle = 'rgba(0,255,136,0.5)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(mx + 4, my + 4);
+    ctx.lineTo(mx + cs * 3 - 4, my + cs * 3 - 4);
+    ctx.stroke();
+
+    // Animate connecting lines between symmetric pairs
+    const pairs = [[0,1],[0,2],[1,2]];
+    const pairColors = ['#00d4ff', '#ff6b35', '#ffcc00'];
+    pairs.forEach(([r,c], idx) => {
+      const x1 = mx + c * cs + cs / 2;
+      const y1 = my + r * cs + cs / 2;
+      const x2 = mx + r * cs + cs / 2;
+      const y2 = my + c * cs + cs / 2;
+      const pairEase = Math.min(1, Math.max(0, (ease - idx * 0.2) / 0.4));
+      if (pairEase > 0) {
+        ctx.globalAlpha = pairEase;
+        ctx.strokeStyle = pairColors[idx];
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([4, 3]);
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 + (x2 - x1) * pairEase, y1 + (y2 - y1) * pairEase);
+        ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      }
+    });
+
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '左右完全重合！', ANIM_W / 2 - 40, my + cs * 3 + 18, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '折叠后左右完全重合 = 对称矩阵';
+
+  } else if (phase === 2) {
+    // Phase 2: Skew-symmetric matrix
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    ctx.globalAlpha = ease;
+    drawText(ctx, '反对称矩阵', ANIM_W / 2 - 40, my - 16, '#00d4ff', 15);
+    drawMatrix(ctx, skewM, mx, my, cs);
+    ctx.globalAlpha = 1;
+
+    // Highlight diagonal zeros
+    if (ease > 0.2) {
+      const alpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.globalAlpha = alpha;
+      for (let i = 0; i < 3; i++) {
+        ctx.fillStyle = 'rgba(255,51,102,0.2)';
+        ctx.fillRect(mx + i * cs, my + i * cs, cs, cs);
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // Show aij = -aji pairs
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.4);
+      ctx.globalAlpha = alpha;
+      const pairs = [[0,1],[0,2],[1,2]];
+      const colors = ['rgba(0,212,255,0.25)', 'rgba(255,107,53,0.25)', 'rgba(255,204,0,0.25)'];
+      pairs.forEach(([r,c], idx) => {
+        ctx.fillStyle = colors[idx];
+        ctx.fillRect(mx + c * cs, my + r * cs, cs, cs);
+        ctx.fillRect(mx + r * cs, my + c * cs, cs, cs);
+      });
+      drawText(ctx, '对角线为0，a\u1d62\u2c7c = -a\u2c7c\u1d62', ANIM_W / 2 - 90, my + cs * 3 + 18, '#00d4ff', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '反对称矩阵：对角线为0，aᵢⱼ = -aⱼᵢ';
+
+  } else if (phase === 3) {
+    // Phase 3: Asymmetric matrix
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    ctx.globalAlpha = ease;
+    drawText(ctx, '非对称矩阵', ANIM_W / 2 - 35, my - 16, '#ff6b35', 15);
+    drawMatrix(ctx, asymM, mx, my, cs);
+    ctx.globalAlpha = 1;
+
+    // Highlight mismatched pairs
+    if (ease > 0.3) {
+      const alpha = Math.min(1, (ease - 0.3) / 0.4);
+      ctx.globalAlpha = alpha;
+      // a12=3 vs a21=5 (not equal, not opposite)
+      ctx.fillStyle = 'rgba(255,51,102,0.3)';
+      ctx.fillRect(mx + 1 * cs, my + 0 * cs, cs, cs);
+      ctx.fillRect(mx + 0 * cs, my + 1 * cs, cs, cs);
+      // a13=2 vs a31=4
+      ctx.fillRect(mx + 2 * cs, my + 0 * cs, cs, cs);
+      ctx.fillRect(mx + 0 * cs, my + 2 * cs, cs, cs);
+
+      // Draw X marks on mismatched pairs
+      ctx.strokeStyle = '#ff3366';
+      ctx.lineWidth = 2;
+      const mismatches = [[0,1],[1,0],[0,2],[2,0]];
+      mismatches.forEach(([r,c]) => {
+        const cx = mx + c * cs + cs / 2;
+        const cy = my + r * cs + cs / 2;
+        ctx.beginPath();
+        ctx.moveTo(cx - 6, cy - 6); ctx.lineTo(cx + 6, cy + 6);
+        ctx.moveTo(cx + 6, cy - 6); ctx.lineTo(cx - 6, cy + 6);
+        ctx.stroke();
+      });
+
+      drawText(ctx, 'a\u1d62\u2c7c \u2260 a\u2c7c\u1d62 且 a\u1d62\u2c7c \u2260 -a\u2c7c\u1d62', ANIM_W / 2 - 110, my + cs * 3 + 18, '#ff3366', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '非对称矩阵：既不对称也不反对称';
+
+  } else {
+    // Phase 4: Summary of three types
+    const cs2 = 28;
+    const gap = 20;
+    const totalW = cs2 * 2 * 3 + gap * 2;
+    const startX = (ANIM_W - totalW) / 2;
+    const y = 25;
+
+    // Symmetric
+    const s1 = [[1,2],[2,3]];
+    const s2 = [[0,1],[-1,0]];
+    const s3 = [[1,3],[2,1]];
+
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.3);
+      drawText(ctx, '对称', startX + cs2, y - 14, '#f472b6', 13);
+      drawMatrix(ctx, s1, startX, y, cs2);
+      drawText(ctx, 'A\u1d40 = A', startX, y + cs2 * 2 + 10, '#00ff88', 12);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.3) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.3) / 0.3);
+      const x2 = startX + cs2 * 2 + gap;
+      drawText(ctx, '反对称', x2 + cs2, y - 14, '#00d4ff', 13);
+      drawMatrix(ctx, s2, x2, y, cs2);
+      drawText(ctx, 'A\u1d40 = -A', x2, y + cs2 * 2 + 10, '#00d4ff', 12);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.3);
+      const x3 = startX + (cs2 * 2 + gap) * 2;
+      drawText(ctx, '非对称', x3 + cs2, y - 14, '#ff6b35', 13);
+      drawMatrix(ctx, s3, x3, y, cs2);
+      drawText(ctx, '以上都不满足', x3 - 10, y + cs2 * 2 + 10, '#ff6b35', 12);
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '掌握三种对称类型，快速判断！', ANIM_W / 2 - 110, y + cs2 * 2 + 40, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '三种对称类型总结';
+  }
+}
+
+// ===== Animation 8: Matrix Rank =====
+function drawRankAnim(phase) {
+  const ctx = animCtx;
+  const caption = animCaptionEl;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+  const cs = 36;
+
+  if (phase === 0) {
+    // Phase 0: Show a matrix
+    const M = [[1,2,3],[2,4,6],[1,0,1]];
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    ctx.globalAlpha = ease;
+    drawText(ctx, '矩阵 A', ANIM_W / 2 - 20, my - 16, '#34d399', 15);
+    drawMatrix(ctx, M, mx, my, cs);
+    ctx.globalAlpha = 1;
+    caption.textContent = '展示矩阵 A';
+
+  } else if (phase === 1) {
+    // Phase 1: Row operations animation
+    const M = [[1,2,3],[2,4,6],[1,0,1]];
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    drawText(ctx, '矩阵 A', ANIM_W / 2 - 20, my - 16, '#34d399', 15);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Highlight row 2 (index 1)
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,107,53,0.3)';
+      ctx.fillRect(mx, my + cs, cs * 3, cs);
+      drawText(ctx, 'R2 - 2\u00d7R1', mx, my + cs * 3 + 12, '#ff6b35', 13);
+      ctx.globalAlpha = 1;
+    }
+
+    // Show transformation arrow
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.3);
+      ctx.globalAlpha = alpha;
+      drawText(ctx, '\u2193', ANIM_W / 2 - 5, my + cs * 3 + 28, '#ffcc00', 18);
+      // Show resulting row 2: [0, 0, 0]
+      const ry = my + cs * 3 + 42;
+      ctx.fillStyle = 'rgba(255,51,102,0.15)';
+      ctx.fillRect(mx, ry, cs * 3, cs);
+      ctx.fillStyle = '#ff3366';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('0', mx + cs / 2, ry + cs / 2);
+      ctx.fillText('0', mx + cs * 1.5, ry + cs / 2);
+      ctx.fillText('0', mx + cs * 2.5, ry + cs / 2);
+      drawText(ctx, '\u2190 全零行！', mx + cs * 3 + 10, ry + cs / 2, '#ff3366', 13);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '初等行变换：R2 - 2\u00d7R1 = [0, 0, 0]';
+
+  } else if (phase === 2) {
+    // Phase 2: Show row echelon form
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    drawText(ctx, '行阶梯形', ANIM_W / 2 - 30, my - 16, '#34d399', 15);
+
+    const ref = [[1,2,3],[0,0,0],[0,-2,-2]];
+    drawMatrix(ctx, ref, mx, my, cs);
+
+    // Highlight zero row
+    if (ease > 0.2) {
+      const alpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,51,102,0.2)';
+      ctx.fillRect(mx, my + cs, cs * 3, cs);
+      ctx.globalAlpha = 1;
+    }
+
+    // Highlight non-zero rows
+    if (ease > 0.5) {
+      const alpha = Math.min(1, (ease - 0.5) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(0,255,136,0.15)';
+      ctx.fillRect(mx, my, cs * 3, cs);
+      ctx.fillRect(mx, my + cs * 2, cs * 3, cs);
+      drawText(ctx, '非零行', mx + cs * 3 + 10, my + cs / 2, '#00ff88', 13);
+      drawText(ctx, '非零行', mx + cs * 3 + 10, my + cs * 2.5, '#00ff88', 13);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '行阶梯形：2个非零行，1个零行';
+
+  } else if (phase === 3) {
+    // Phase 3: Show rank result
+    const mx = ANIM_W / 2 - cs * 1.5, my = 30;
+    drawText(ctx, '行阶梯形', ANIM_W / 2 - 30, my - 16, '#34d399', 15);
+
+    const ref = [[1,2,3],[0,0,0],[0,-2,-2]];
+    drawMatrix(ctx, ref, mx, my, cs);
+
+    // Highlight non-zero rows with glow
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    ctx.fillStyle = `rgba(0,255,136,${0.15 * pulse})`;
+    ctx.fillRect(mx, my, cs * 3, cs);
+    ctx.fillRect(mx, my + cs * 2, cs * 3, cs);
+
+    // Big rank result
+    if (ease > 0.3) {
+      const scale = 0.5 + 0.5 * easeOutBounce(Math.min(1, (ease - 0.3) / 0.5));
+      ctx.save();
+      ctx.translate(ANIM_W / 2, my + cs * 3 + 40);
+      ctx.scale(scale, scale);
+      ctx.shadowColor = '#ffcc00';
+      ctx.shadowBlur = 15 * pulse;
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = 'bold 24px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('r(A) = 2', 0, 0);
+      ctx.restore();
+    }
+
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '非零行个数 = 秩', ANIM_W / 2 - 50, my + cs * 3 + 65, '#34d399', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '秩 = 非零行的个数 = 2';
+
+  } else {
+    // Phase 4: Show different rank examples
+    const cs2 = 30;
+    const examples = [
+      { m: [[1,2],[2,4]], rank: 1, label: 'r=1', color: '#ff6b35' },
+      { m: [[1,0],[0,1]], rank: 2, label: 'r=2', color: '#00ff88' },
+      { m: [[0,0],[0,0]], rank: 0, label: 'r=0', color: '#ff3366' },
+    ];
+    const gap = 30;
+    const totalW = cs2 * 2 * 3 + gap * 2;
+    const startX = (ANIM_W - totalW) / 2;
+    const y = 25;
+
+    examples.forEach((ex, idx) => {
+      const x = startX + (cs2 * 2 + gap) * idx;
+      const showEase = Math.min(1, Math.max(0, (ease - idx * 0.2) / 0.4));
+      if (showEase > 0) {
+        ctx.globalAlpha = showEase;
+        drawMatrix(ctx, ex.m, x, y, cs2);
+        if (showEase > 0.5) {
+          const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+          ctx.shadowColor = ex.color;
+          ctx.shadowBlur = 10 * pulse;
+          ctx.fillStyle = ex.color;
+          ctx.font = 'bold 18px "JetBrains Mono"';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'middle';
+          ctx.fillText(ex.label, x + cs2, y + cs2 * 2 + 18);
+          ctx.shadowBlur = 0;
+        }
+        ctx.globalAlpha = 1;
+      }
+    });
+
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '0 \u2264 r(A) \u2264 min(\u884c\u6570, \u5217\u6570)', ANIM_W / 2 - 80, y + cs2 * 2 + 50, '#ffcc00', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '不同秩的矩阵示例';
+  }
+}
+
+function drawEmptyMatrixBrackets(ctx, x, y, rows, cols, cs, color) {
+  ctx.strokeStyle = color || '#ffcc00';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 6, y - 4); ctx.lineTo(x - 10, y - 4);
+  ctx.lineTo(x - 10, y + rows * cs + 4); ctx.lineTo(x - 6, y + rows * cs + 4);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(x + cols * cs + 6, y - 4); ctx.lineTo(x + cols * cs + 10, y - 4);
+  ctx.lineTo(x + cols * cs + 10, y + rows * cs + 4); ctx.lineTo(x + cols * cs + 6, y + rows * cs + 4);
+  ctx.stroke();
+  // Draw question marks
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = x + j * cs + cs / 2;
+      const cy = y + i * cs + cs / 2;
+      ctx.fillStyle = 'rgba(255,204,0,0.2)';
+      ctx.font = '16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('?', cx, cy);
+    }
+  }
+}
+
+// ===== Canvas Drawing Helpers =====
+function drawMatrix(ctx, matrix, x, y, cellSize, highlightRow, highlightCol, highlightColor) {
+  const rows = matrix.length, cols = matrix[0].length;
+  // Draw bracket left
+  ctx.strokeStyle = '#00d4ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x - 4, y - 4);
+  ctx.lineTo(x - 8, y - 4);
+  ctx.lineTo(x - 8, y + rows * cellSize + 4);
+  ctx.lineTo(x - 4, y + rows * cellSize + 4);
+  ctx.stroke();
+  // Draw bracket right
+  ctx.beginPath();
+  ctx.moveTo(x + cols * cellSize + 4, y - 4);
+  ctx.lineTo(x + cols * cellSize + 8, y - 4);
+  ctx.lineTo(x + cols * cellSize + 8, y + rows * cellSize + 4);
+  ctx.lineTo(x + cols * cellSize + 4, y + rows * cellSize + 4);
+  ctx.stroke();
+
+  // Draw cells
+  for (let i = 0; i < rows; i++) {
+    for (let j = 0; j < cols; j++) {
+      const cx = x + j * cellSize + cellSize / 2;
+      const cy = y + i * cellSize + cellSize / 2;
+
+      // Highlight
+      if (highlightRow !== undefined && i === highlightRow && highlightColor) {
+        ctx.fillStyle = highlightColor;
+        ctx.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
+      }
+      if (highlightCol !== undefined && j === highlightCol && highlightColor) {
+        ctx.fillStyle = highlightColor;
+        ctx.fillRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
+      }
+
+      // Cell border
+      ctx.strokeStyle = 'rgba(0,212,255,0.15)';
+      ctx.lineWidth = 1;
+      ctx.strokeRect(x + j * cellSize, y + i * cellSize, cellSize, cellSize);
+
+      // Number
+      const val = matrix[i][j];
+      const isNeg = val < 0;
+      ctx.fillStyle = isNeg ? '#ff3366' : '#e0e6ff';
+      ctx.font = 'bold 16px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(val, cx, cy);
+    }
+  }
+}
+
+function drawText(ctx, text, x, y, color, size) {
+  ctx.fillStyle = color || '#e0e6ff';
+  ctx.font = (size || 14) + 'px "Noto Sans SC", sans-serif';
+  ctx.textAlign = 'left';
+  ctx.textBaseline = 'middle';
+  ctx.fillText(text, x, y);
+}
+
+function drawArrow(ctx, x1, y1, x2, y2, color) {
+  const angle = Math.atan2(y2 - y1, x2 - x1);
+  const headLen = 8;
+  ctx.strokeStyle = color || '#00d4ff';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(x2, y2);
+  ctx.stroke();
+  ctx.fillStyle = color || '#00d4ff';
+  ctx.beginPath();
+  ctx.moveTo(x2, y2);
+  ctx.lineTo(x2 - headLen * Math.cos(angle - 0.4), y2 - headLen * Math.sin(angle - 0.4));
+  ctx.lineTo(x2 - headLen * Math.cos(angle + 0.4), y2 - headLen * Math.sin(angle + 0.4));
+  ctx.closePath();
+  ctx.fill();
+}
+
+function drawVectorArrow(ctx, x1, y1, x2, y2, color, label) {
+  drawFatVectorArrow(ctx, x1, y1, x2, y2, color, 2.5);
+  if (label) {
+    drawText(ctx, label, x2 + 8, y2 - 8, color, 13);
+  }
+}
+
+function drawVector(ctx, ox, oy, vx, vy, color, label) {
+  drawVectorArrow(ctx, ox, oy, ox + vx, oy - vy, color, label);
+}
+
+// ===== Animation 9: Linear Equations (Cramer's Rule) =====
+function drawEquationAnim(phase) {
+  const ctx = animCtx;
+  const caption = animCaptionEl;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+  const cs = 36;
+
+  // Example: x + 2y = 5, 3x + 4y = 11
+  const A = [[1,2],[3,4]];
+  const b = [5, 11];
+  const detA = -2;
+  const A1 = [[5,2],[11,4]];
+  const detA1 = -2;
+  const A2 = [[1,5],[3,11]];
+  const detA2 = -4;
+  const sol = [1, 2];
+
+  if (phase === 0) {
+    // Phase 0: Show the system of equations
+    ctx.globalAlpha = ease;
+    drawText(ctx, '线性方程组', ANIM_W / 2 - 40, 20, '#60a5fa', 16);
+    drawText(ctx, 'x + 2y = 5', 60, 65, '#e0e6ff', 16);
+    drawText(ctx, '3x + 4y = 11', 60, 95, '#e0e6ff', 16);
+    ctx.globalAlpha = 1;
+    caption.textContent = '展示线性方程组';
+
+  } else if (phase === 1) {
+    // Phase 1: Convert to matrix form Ax = b
+    drawText(ctx, '矩阵形式 Ax = b', ANIM_W / 2 - 55, 20, '#60a5fa', 15);
+    drawText(ctx, 'A', 30, 60, '#00d4ff', 14);
+    drawMatrix(ctx, A, 50, 75, cs);
+    drawText(ctx, 'x', 50 + cs * 2 + 18, 60, '#ffcc00', 14);
+    // x vector
+    ctx.fillStyle = '#ffcc00';
+    ctx.font = 'bold 16px "JetBrains Mono"';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('x', 50 + cs * 2 + 30, 75 + cs / 2);
+    ctx.fillText('y', 50 + cs * 2 + 30, 75 + cs * 1.5);
+    drawText(ctx, '=', 50 + cs * 2 + 55, 60, '#ff6b35', 18);
+    drawText(ctx, 'b', 50 + cs * 2 + 80, 60, '#ff6b35', 14);
+    // b vector
+    ctx.fillStyle = '#ff6b35';
+    ctx.fillText('5', 50 + cs * 2 + 92, 75 + cs / 2);
+    ctx.fillText('11', 50 + cs * 2 + 92, 75 + cs * 1.5);
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, 'det(A) = 1\u00d74 - 2\u00d73 = -2 \u2260 0 \u2192 有唯一解', 30, 170, '#00ff88', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '写成矩阵形式 Ax = b';
+
+  } else if (phase === 2) {
+    // Phase 2: Calculate det(A)
+    drawText(ctx, '计算 det(A)', ANIM_W / 2 - 40, 20, '#60a5fa', 15);
+    drawMatrix(ctx, A, ANIM_W / 2 - cs, 45, cs);
+
+    if (ease > 0.2) {
+      const alpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.globalAlpha = alpha;
+      // Highlight main diagonal
+      ctx.fillStyle = 'rgba(0,255,136,0.2)';
+      ctx.fillRect(ANIM_W / 2 - cs, 45, cs, cs);
+      ctx.fillRect(ANIM_W / 2, 45 + cs, cs, cs);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.3);
+      ctx.globalAlpha = alpha;
+      // Highlight anti-diagonal
+      ctx.fillStyle = 'rgba(255,51,102,0.2)';
+      ctx.fillRect(ANIM_W / 2, 45, cs, cs);
+      ctx.fillRect(ANIM_W / 2 - cs, 45 + cs, cs, cs);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, 'det(A) = 1\u00d74 - 2\u00d73 = 4 - 6 = -2', ANIM_W / 2 - 100, 45 + cs * 2 + 25, '#ffcc00', 16);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '计算 det(A) = -2';
+
+  } else if (phase === 3) {
+    // Phase 3: Cramer's rule - solve for x and y
+    drawText(ctx, '克拉默法则', ANIM_W / 2 - 40, 15, '#60a5fa', 15);
+
+    // A1 matrix
+    drawText(ctx, 'A\u2081（替换第1列）', 20, 35, '#ff6b35', 12);
+    drawMatrix(ctx, A1, 30, 48, 30);
+    if (ease > 0.2) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      drawText(ctx, 'det(A\u2081) = 5\u00d74 - 2\u00d711 = -2', 20, 115, '#ff6b35', 13);
+      drawText(ctx, 'x = -2 / -2 = 1', 20, 138, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+
+    // A2 matrix
+    drawText(ctx, 'A\u2082（替换第2列）', 260, 35, '#a78bfa', 12);
+    drawMatrix(ctx, A2, 270, 48, 30);
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.3);
+      drawText(ctx, 'det(A\u2082) = 1\u00d711 - 5\u00d73 = -4', 260, 115, '#a78bfa', 13);
+      drawText(ctx, 'y = -4 / -2 = 2', 260, 138, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '用克拉默法则求解 x 和 y';
+
+  } else {
+    // Phase 4: Verify solution
+    drawText(ctx, '验证解', ANIM_W / 2 - 20, 20, '#60a5fa', 15);
+
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 12 * pulse;
+    drawText(ctx, 'x = 1, y = 2', ANIM_W / 2 - 40, 55, '#ffcc00', 20);
+    ctx.shadowBlur = 0;
+
+    if (ease > 0.2) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.2) / 0.3);
+      drawText(ctx, '验证：', 60, 100, '#e0e6ff', 14);
+      drawText(ctx, 'x + 2y = 1 + 2\u00d72 = 5 \u2713', 60, 125, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.3);
+      drawText(ctx, '3x + 4y = 3\u00d71 + 4\u00d72 = 11 \u2713', 60, 155, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '解正确！', ANIM_W / 2 - 25, 195, '#ffcc00', 18);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '验证解的正确性';
+  }
+}
+
+// ===== Animation 10: Elementary Row Operations =====
+function drawElementaryAnim(phase) {
+  const ctx = animCtx;
+  const caption = animCaptionEl;
+  const t = Math.min(1, (Date.now() - phaseStartTime) / 2200);
+  const ease = easeInOut(t);
+  const cs = 40;
+
+  // Example: [1,3; 2,7] with r2 - 2r1
+  const M = [[1,3],[2,7]];
+  const result = [[1,3],[0,1]];
+
+  if (phase === 0) {
+    // Phase 0: Show original matrix
+    const mx = ANIM_W / 2 - cs, my = 50;
+    ctx.globalAlpha = ease;
+    drawText(ctx, '原始矩阵', ANIM_W / 2 - 30, my - 16, '#fbbf24', 15);
+    drawMatrix(ctx, M, mx, my, cs);
+    ctx.globalAlpha = 1;
+    caption.textContent = '展示原始矩阵';
+
+  } else if (phase === 1) {
+    // Phase 1: Highlight the rows involved
+    const mx = ANIM_W / 2 - cs, my = 50;
+    drawText(ctx, '原始矩阵', ANIM_W / 2 - 30, my - 16, '#fbbf24', 15);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Highlight row 1 (source)
+    if (ease > 0.1) {
+      const alpha = Math.min(1, (ease - 0.1) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(0,212,255,0.3)';
+      ctx.fillRect(mx, my, cs * 2, cs);
+      drawText(ctx, 'r\u2081（源行）', mx + cs * 2 + 15, my + cs / 2, '#00d4ff', 13);
+      ctx.globalAlpha = 1;
+    }
+
+    // Highlight row 2 (target)
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,107,53,0.3)';
+      ctx.fillRect(mx, my + cs, cs * 2, cs);
+      drawText(ctx, 'r\u2082（目标行）', mx + cs * 2 + 15, my + cs * 1.5, '#ff6b35', 13);
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.7) {
+      ctx.globalAlpha = (ease - 0.7) / 0.3;
+      drawText(ctx, '操作：r\u2082 - 2r\u2081', ANIM_W / 2 - 50, my + cs * 2 + 25, '#ffcc00', 16);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '高亮要变换的行：r\u2082 - 2r\u2081';
+
+  } else if (phase === 2) {
+    // Phase 2: Animate the transformation
+    const mx = ANIM_W / 2 - cs, my = 50;
+    drawText(ctx, '原始矩阵', ANIM_W / 2 - 30, my - 16, '#fbbf24', 15);
+    drawMatrix(ctx, M, mx, my, cs);
+
+    // Show computation
+    if (ease > 0.1) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.1) / 0.3);
+      drawText(ctx, '新r\u2082 = r\u2082 - 2\u00d7r\u2081', 30, my + cs * 2 + 20, '#ff6b35', 14);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.3) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.3) / 0.2);
+      drawText(ctx, '[2, 7] - 2\u00d7[1, 3]', 30, my + cs * 2 + 45, '#e0e6ff', 14);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.5) {
+      ctx.globalAlpha = Math.min(1, (ease - 0.5) / 0.2);
+      drawText(ctx, '= [2-2, 7-6]', 30, my + cs * 2 + 70, '#e0e6ff', 14);
+      ctx.globalAlpha = 1;
+    }
+    if (ease > 0.7) {
+      const alpha = Math.min(1, (ease - 0.7) / 0.3);
+      ctx.globalAlpha = alpha;
+      drawText(ctx, '= [0, 1]', 30, my + cs * 2 + 95, '#00ff88', 16);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '计算变换过程';
+
+  } else if (phase === 3) {
+    // Phase 3: Show result matrix
+    const mx = ANIM_W / 2 - cs, my = 50;
+    drawText(ctx, '变换结果', ANIM_W / 2 - 30, my - 16, '#fbbf24', 15);
+
+    const pulse = 0.7 + 0.3 * Math.sin(Date.now() / 200);
+    const scale = 0.8 + 0.2 * easeOutBounce(Math.min(1, t / 0.5));
+    ctx.save();
+    ctx.translate(ANIM_W / 2, my + cs);
+    ctx.scale(scale, scale);
+    ctx.translate(-ANIM_W / 2, -(my + cs));
+    ctx.shadowColor = '#ffcc00';
+    ctx.shadowBlur = 15 * pulse;
+    drawMatrix(ctx, result, mx, my, cs);
+    ctx.shadowBlur = 0;
+    ctx.restore();
+
+    if (ease > 0.5) {
+      ctx.globalAlpha = (ease - 0.5) * 2;
+      drawText(ctx, 'r\u2082 变为 [0, 1]，变换完成！', ANIM_W / 2 - 80, my + cs * 2 + 25, '#00ff88', 15);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '变换后的结果矩阵';
+
+  } else {
+    // Phase 4: Show row echelon form concept
+    const cs2 = 32;
+    const mx = ANIM_W / 2 - cs2 * 1.5, my = 25;
+    drawText(ctx, '行阶梯形', ANIM_W / 2 - 30, my - 16, '#fbbf24', 15);
+
+    const ref = [[1,2,3,4],[0,1,2,3],[0,0,1,2],[0,0,0,0]];
+    drawMatrix(ctx, ref, mx, my, cs2);
+
+    // Highlight pivots
+    if (ease > 0.2) {
+      const alpha = Math.min(1, (ease - 0.2) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,204,0,0.3)';
+      ctx.fillRect(mx, my, cs2, cs2);
+      ctx.fillRect(mx + cs2, my + cs2, cs2, cs2);
+      ctx.fillRect(mx + cs2 * 2, my + cs2 * 2, cs2, cs2);
+      // Pivot markers
+      ctx.fillStyle = '#ffcc00';
+      ctx.font = 'bold 14px "JetBrains Mono"';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('\u2605', mx + cs2 / 2, my + cs2 / 2);
+      ctx.fillText('\u2605', mx + cs2 * 1.5, my + cs2 * 1.5);
+      ctx.fillText('\u2605', mx + cs2 * 2.5, my + cs2 * 2.5);
+      ctx.globalAlpha = 1;
+    }
+
+    // Highlight zero row
+    if (ease > 0.4) {
+      const alpha = Math.min(1, (ease - 0.4) / 0.3);
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(255,51,102,0.15)';
+      ctx.fillRect(mx, my + cs2 * 3, cs2 * 4, cs2);
+      ctx.globalAlpha = 1;
+    }
+
+    if (ease > 0.6) {
+      ctx.globalAlpha = (ease - 0.6) / 0.4;
+      drawText(ctx, '主元(\u2605)逐行右移，零行在最下方', ANIM_W / 2 - 110, my + cs2 * 4 + 15, '#00ff88', 14);
+      ctx.globalAlpha = 1;
+    }
+    caption.textContent = '行阶梯形：主元逐行右移';
+  }
+}
+
+// --- Linear Equations Generation ---
+function genEquation(cat) {
+  let n, A, x, b, answer;
+  let attempts = 0;
+
+  if (cat === 'tutorial' || cat === 'beginner') {
+    // 2x2 system with integer solutions
+    n = 2;
+    do {
+      x = [randInt(-5, 5), randInt(-5, 5)];
+      A = [[randInt(-5, 5), randInt(-5, 5)], [randInt(-5, 5), randInt(-5, 5)]];
+      const d = det2(A[0][0], A[0][1], A[1][0], A[1][1]);
+      if (d === 0) { attempts++; continue; }
+      b = [A[0][0]*x[0] + A[0][1]*x[1], A[1][0]*x[0] + A[1][1]*x[1]];
+      attempts++;
+    } while (attempts < 200 && (Math.abs(b[0]) > 30 || Math.abs(b[1]) > 30));
+    answer = x;
+  } else if (cat === 'intermediate') {
+    // 3x3 system with integer solutions
+    n = 3;
+    do {
+      x = [randInt(-3, 3), randInt(-3, 3), randInt(-3, 3)];
+      A = [];
+      for (let i = 0; i < 3; i++) {
+        A[i] = [randInt(-4, 4), randInt(-4, 4), randInt(-4, 4)];
+      }
+      const d = det3(A);
+      if (d === 0) { attempts++; continue; }
+      b = [];
+      for (let i = 0; i < 3; i++) {
+        b[i] = A[i][0]*x[0] + A[i][1]*x[1] + A[i][2]*x[2];
+      }
+      attempts++;
+    } while (attempts < 200 && b.some(v => Math.abs(v) > 30));
+    answer = x;
+  } else {
+    // 3x3 system, solutions may be fractions, round to 1 decimal
+    n = 3;
+    do {
+      x = [];
+      for (let i = 0; i < 3; i++) {
+        x[i] = Math.round((randInt(-20, 20) / 2)) / 2; // half-integer solutions
+      }
+      A = [];
+      for (let i = 0; i < 3; i++) {
+        A[i] = [randInt(-4, 4), randInt(-4, 4), randInt(-4, 4)];
+      }
+      const d = det3(A);
+      if (d === 0) { attempts++; continue; }
+      b = [];
+      for (let i = 0; i < 3; i++) {
+        b[i] = A[i][0]*x[0] + A[i][1]*x[1] + A[i][2]*x[2];
+      }
+      attempts++;
+    } while (attempts < 200 && b.some(v => Math.abs(v) > 40));
+    answer = x.map(v => Math.round(v * 10) / 10);
+  }
+
+  const vars = n === 2 ? ['x', 'y'] : ['x', 'y', 'z'];
+  return { type: 'equation', A, b, answer, n, vars };
+}
+
+// --- Elementary Row Operations Generation ---
+function genElementary(cat) {
+  let rows, cols, valRange;
+  if (cat === 'tutorial') { rows = 2; cols = 2; valRange = 3; }
+  else if (cat === 'beginner') { rows = 2; cols = 2; valRange = 4; }
+  else if (cat === 'intermediate') { rows = Math.random() < 0.5 ? 2 : 3; cols = rows === 2 ? 3 : 3; valRange = 4; }
+  else { rows = 3; cols = 3; valRange = 5; }
+
+  const matrix = [];
+  for (let i = 0; i < rows; i++) {
+    matrix[i] = [];
+    for (let j = 0; j < cols; j++) {
+      matrix[i][j] = randInt(-valRange, valRange);
+    }
+  }
+
+  const k = randChoice([-3,-2,-1,1,2,3]);
+  const targetIdx = randInt(0, rows - 1);
+  let sourceIdx;
+  do { sourceIdx = randInt(0, rows - 1); } while (sourceIdx === targetIdx);
+  const operation = { type: 'add', targetRow: targetIdx, sourceRow: sourceIdx, k: k };
+
+  const answer = matrix.map(r => [...r]);
+  for (let j = 0; j < cols; j++) {
+    answer[targetIdx][j] = matrix[targetIdx][j] + k * matrix[sourceIdx][j];
+  }
+
+  return { type: 'elementary', matrix, operation, answer, targetRow: targetIdx, rows, cols };
+}
+
+// --- Render Linear Equations ---
+function renderEquation(q, area) {
+  const { A, b, n, vars } = q;
+  let html = `<div class="problem-statement">求解线性方程组</div>`;
+
+  // Display equations
+  html += `<div style="font-family:'JetBrains Mono',monospace;font-size:1rem;text-align:center;margin:8px 0;line-height:2">`;
+  for (let i = 0; i < n; i++) {
+    let eq = '';
+    for (let j = 0; j < n; j++) {
+      const coeff = A[i][j];
+      if (j === 0) {
+        if (coeff === 1) eq += vars[j];
+        else if (coeff === -1) eq += '-' + vars[j];
+        else eq += coeff + vars[j];
+      } else {
+        if (coeff > 0) eq += ' + ' + (coeff === 1 ? '' : coeff) + vars[j];
+        else if (coeff < 0) eq += ' - ' + (coeff === -1 ? '' : Math.abs(coeff)) + vars[j];
+      }
+    }
+    eq += ' = ' + b[i];
+    html += `<div>${eq}</div>`;
+  }
+  html += `</div>`;
+
+  // Matrix form
+  html += `<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;justify-content:center;margin:8px 0">`;
+  html += createMatrixHTML(A);
+  html += `<span style="font-family:'JetBrains Mono',monospace;color:var(--text-dim);font-size:1.2rem">[`;
+  for (let i = 0; i < n; i++) {
+    if (i > 0) html += ', ';
+    html += vars[i];
+  }
+  html += `]</span>`;
+  html += `<span class="op">=</span>`;
+  // b vector as column
+  html += `<div class="matrix-display" style="grid-template-columns:1fr">`;
+  for (let i = 0; i < n; i++) {
+    html += `<div class="matrix-cell">${b[i]}</div>`;
+  }
+  html += `</div>`;
+  html += `</div>`;
+
+  // Input fields for each variable
+  html += `<div style="display:flex;gap:15px;align-items:center;justify-content:center;margin:10px 0;flex-wrap:wrap">`;
+  for (let i = 0; i < n; i++) {
+    html += `<label style="font-size:0.95rem;color:var(--text-dim)">${vars[i]} = <input type="text" class="answer-input" data-r="${i}" autocomplete="off" style="width:80px"></label>`;
+  }
+  html += `</div>`;
+
+  const tolerance = (q.n === 3 && state.currentCategory === 'advanced') ? '0.1' : '0.01';
+  html += `<div style="font-size:0.8rem;color:var(--text-dim);margin:5px 0">`;
+  if (q.n === 3 && state.currentCategory === 'advanced') {
+    html += `提示：答案可能含小数，四舍五入到1位小数`;
+  }
+  html += `</div>`;
+
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkEquation()">提交答案</button></div>`;
+  area.innerHTML = html;
+
+  const firstInput = area.querySelector('input');
+  if (firstInput) setTimeout(() => firstInput.focus(), 100);
+  setupInputNavigation(area);
+}
+
+// --- Render Elementary Row Operations ---
+function renderElementary(q, area) {
+  const { matrix, operation, answer, targetRow, rows, cols } = q;
+  const op = operation;
+
+  // Build operation description
+  let opDesc = '';
+  const rowLabels = ['r\u2081', 'r\u2082', 'r\u2083'];
+  if (op.type === 'add') {
+    if (op.k === 1) {
+      opDesc = `${rowLabels[op.targetRow]} + ${rowLabels[op.sourceRow]}`;
+    } else if (op.k === -1) {
+      opDesc = `${rowLabels[op.targetRow]} - ${rowLabels[op.sourceRow]}`;
+    } else if (op.k > 0) {
+      opDesc = `${rowLabels[op.targetRow]} + ${op.k}${rowLabels[op.sourceRow]}`;
+    } else {
+      opDesc = `${rowLabels[op.targetRow]} - ${Math.abs(op.k)}${rowLabels[op.sourceRow]}`;
+    }
+  }
+
+  let html = `<div class="problem-statement">对矩阵执行初等行变换</div>`;
+  html += `<div style="font-family:'JetBrains Mono',monospace;font-size:1.1rem;text-align:center;margin:8px 0;color:var(--warning)">${opDesc}</div>`;
+
+  // Show original matrix
+  html += `<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;justify-content:center">`;
+  html += createMatrixHTML(matrix);
+  html += `<span class="op" style="font-size:1.5rem">\u2192</span>`;
+
+  // Result matrix with input cells only for target row
+  const inputCells = [];
+  for (let i = 0; i < rows; i++) {
+    inputCells[i] = [];
+    for (let j = 0; j < cols; j++) {
+      inputCells[i][j] = (i === targetRow);
+    }
+  }
+  html += createMatrixHTML(answer, inputCells);
+  html += `</div>`;
+
+  html += `<div style="font-size:0.8rem;color:var(--text-dim);margin:5px 0">填写变换后第${targetRow + 1}行的值</div>`;
+  html += `<div class="btn-group"><button class="btn btn-success" onclick="checkElementary()">提交答案</button></div>`;
+  area.innerHTML = html;
+  setupInputNavigation(area);
+}
+
+// --- Check Linear Equations ---
+function checkEquation() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const inputs = document.querySelectorAll('#gameArea input[data-r]');
+  let allCorrect = true;
+  const tolerance = (q.n === 3 && state.currentCategory === 'advanced') ? 0.15 : 0.01;
+
+  inputs.forEach(inp => {
+    const idx = parseInt(inp.dataset.r);
+    const val = parseFloat(inp.value);
+    const correct = q.answer[idx];
+    if (isNaN(val) || Math.abs(val - correct) > tolerance) {
+      allCorrect = false;
+      inp.classList.add('wrong');
+      inp.value = correct;
+    } else {
+      inp.classList.add('correct');
+    }
+  });
+  state.answered = true;
+  processAnswer(allCorrect, q);
+}
+
+// --- Check Elementary Row Operations ---
+function checkElementary() {
+  if (state.answered) return;
+  const q = state.questions[state.questionIndex];
+  const { allCorrect } = checkMatrixInputs(q, 0.5, true);
+  state.answered = true;
+  processAnswer(allCorrect, q);
+}
+
+// ==================== BACKGROUND ANIMATION ====================
+const canvas = document.getElementById('bgCanvas');
+const ctx = canvas.getContext('2d');
+let particles_bg = [];
+let gridOffset = 0;
+
+function resizeCanvas() {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+}
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// Create background particles
+for (let i = 0; i < 50; i++) {
+  particles_bg.push({
+    x: Math.random() * canvas.width,
+    y: Math.random() * canvas.height,
+    vx: (Math.random() - 0.5) * 0.5,
+    vy: (Math.random() - 0.5) * 0.5,
+    size: Math.random() * 2 + 0.5,
+    alpha: Math.random() * 0.5 + 0.1,
+  });
+}
+
+function drawBackground() {
+  if (document.hidden) { requestAnimationFrame(drawBackground); return; }
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Draw grid
+  ctx.strokeStyle = 'rgba(0,212,255,0.04)';
+  ctx.lineWidth = 1;
+  const gridSize = 40;
+  gridOffset = (gridOffset + 0.15) % gridSize;
+  for (let x = gridOffset; x < canvas.width; x += gridSize) {
+    ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+  }
+  for (let y = gridOffset; y < canvas.height; y += gridSize) {
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+  }
+
+  // Draw particles
+  particles_bg.forEach(p => {
+    p.x += p.vx;
+    p.y += p.vy;
+    if (p.x < 0) p.x = canvas.width;
+    if (p.x > canvas.width) p.x = 0;
+    if (p.y < 0) p.y = canvas.height;
+    if (p.y > canvas.height) p.y = 0;
+
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+    ctx.fillStyle = `rgba(0,212,255,${p.alpha})`;
+    ctx.fill();
+  });
+
+  // Draw connections
+  ctx.strokeStyle = 'rgba(0,212,255,0.03)';
+  ctx.lineWidth = 0.5;
+  for (let i = 0; i < particles_bg.length; i++) {
+    for (let j = i + 1; j < particles_bg.length; j++) {
+      const dx = particles_bg[i].x - particles_bg[j].x;
+      const dy = particles_bg[i].y - particles_bg[j].y;
+      const dist = Math.sqrt(dx*dx + dy*dy);
+      if (dist < 120) {
+        ctx.beginPath();
+        ctx.moveTo(particles_bg[i].x, particles_bg[i].y);
+        ctx.lineTo(particles_bg[j].x, particles_bg[j].y);
+        ctx.stroke();
+      }
+    }
+  }
+
+  requestAnimationFrame(drawBackground);
+}
+drawBackground();
+
+// ==================== KEYBOARD SHORTCUTS ====================
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    const gameScreen = document.getElementById('gameScreen');
+    if (gameScreen.classList.contains('active')) {
+      confirmExit();
+    }
+  }
+});
+
+// ==================== INIT ====================
+showScreen('startScreen');
+</script>
+</body>
+</html>
